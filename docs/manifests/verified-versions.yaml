@@ -1,0 +1,24 @@
+# Versions last captured from the source workstation runbook set.
+# Re-check on the target workstation after install/update.
+
+verified_at: "2026-06-08"
+plugins:
+  claude-mem:
+    selector: claude-mem@claude-mem-local
+    version: "13.4.0"
+    notes:
+      - Codex overlay available under overlays/claude-mem/13.4.0/
+      - Run post-install verification before calling healthy.
+
+  8-habit-ai-dev:
+    selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev
+    version: "2.21.9"
+    notes:
+      - Profile and skills load at Codex startup when plugin is enabled.
+
+  claude-governance:
+    selector: claude-governance@pitimon-claude-governance
+    version: "3.4.0"
+    release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.0
+    notes:
+      - Governance skills load at Codex startup when plugin is enabled.

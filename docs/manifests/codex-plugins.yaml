@@ -1,0 +1,52 @@
+# Public Codex plugin handoff manifest.
+#
+# The commands here are intentionally explicit. Use the per-plugin runbooks for
+# safety checks, expected output, and troubleshooting.
+
+plugins:
+  - name: claude-mem
+    display_name: claude-mem
+    marketplace: claude-mem-local
+    selector: claude-mem@claude-mem-local
+    source: thedotmack/claude-mem
+    verified_version: "13.4.0"
+    runbook: docs/runbooks/plugins/claude-mem.md
+    overlay: overlays/claude-mem/13.4.0/
+    codex_install:
+      - codex plugin marketplace add thedotmack/claude-mem
+      - codex plugin add claude-mem@claude-mem-local
+    codex_update:
+      - codex plugin marketplace upgrade claude-mem-local
+      - codex plugin remove claude-mem@claude-mem-local || true
+      - codex plugin add claude-mem@claude-mem-local
+
+  - name: 8-habit-ai-dev
+    display_name: 8-Habit AI Dev
+    marketplace: pitimon-8-habit-ai-dev
+    selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev
+    source: pitimon/8-habit-ai-dev
+    verified_version: "2.21.9"
+    runbook: docs/runbooks/plugins/8-habit-ai-dev.md
+    codex_install:
+      - codex plugin marketplace add pitimon/8-habit-ai-dev
+      - codex plugin add 8-habit-ai-dev@pitimon-8-habit-ai-dev
+    codex_update:
+      - codex plugin marketplace upgrade pitimon-8-habit-ai-dev
+      - codex plugin remove 8-habit-ai-dev@pitimon-8-habit-ai-dev || true
+      - codex plugin add 8-habit-ai-dev@pitimon-8-habit-ai-dev
+
+  - name: claude-governance
+    display_name: Claude Governance
+    marketplace: pitimon-claude-governance
+    selector: claude-governance@pitimon-claude-governance
+    source: pitimon/claude-governance
+    verified_version: "3.4.0"
+    release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.0
+    runbook: docs/runbooks/plugins/claude-governance.md
+    codex_install:
+      - codex plugin marketplace add pitimon/claude-governance
+      - codex plugin add claude-governance@pitimon-claude-governance
+    codex_update:
+      - codex plugin marketplace upgrade pitimon-claude-governance
+      - codex plugin remove claude-governance@pitimon-claude-governance || true
+      - codex plugin add claude-governance@pitimon-claude-governance

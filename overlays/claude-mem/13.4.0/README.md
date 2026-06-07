@@ -4,7 +4,7 @@ This directory is the reviewed local patch overlay for the Codex `claude-mem`
 runtime described in:
 
 ```text
-docs/runbooks/codex-claude-mem-memory-runbook.md
+docs/runbooks/plugins/claude-mem.md
 ```
 
 Apply it only to `claude-mem` version `13.4.0`. After applying it, run
@@ -32,7 +32,7 @@ Install target:
 PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
 test -n "$PLUGIN" && test -d "$PLUGIN"
 test "$(jq -r .version "$PLUGIN/.codex-plugin/plugin.json")" = "13.4.0"
-rsync -a docs/runbooks/assets/claude-mem-13.4.0-codex-local-patches/ "$PLUGIN"/
+rsync -a overlays/claude-mem/13.4.0/ "$PLUGIN"/
 node --check "$PLUGIN/scripts/worker-service.cjs"
 node --check "$PLUGIN/scripts/transcript-watcher.cjs"
 node --check "$PLUGIN/scripts/codex-hook-spool.cjs"
