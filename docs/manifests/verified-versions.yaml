@@ -22,3 +22,12 @@ plugins:
     release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.0
     notes:
       - Governance skills load at Codex startup when plugin is enabled.
+
+tools:
+  tokentracker:
+    package: "@ipv9/tokentracker-cli"
+    version: "0.39.6"
+    source: pitimon/TokenTracker
+    notes:
+      - npm view returned public package metadata.
+      - Package exposes tokentracker, tracker, tokentracker-cli, and tokentracker-tracker binaries.

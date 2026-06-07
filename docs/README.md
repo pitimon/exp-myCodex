@@ -1,7 +1,7 @@
-# Codex Plugin Handoff
+# Codex Handoff
 
 This directory documents public-safe setup and validation flows for Codex
-plugins.
+plugins and adjacent CLI tools.
 
 ## Quick Start
 
@@ -19,10 +19,17 @@ docs/runbooks/plugins/claude-governance.md
 docs/runbooks/plugins/claude-mem.md
 ```
 
+For non-plugin tooling, read:
+
+```text
+docs/runbooks/tools/tokentracker.md
+```
+
 For a compact inventory, read:
 
 ```text
 docs/manifests/codex-plugins.yaml
+docs/manifests/codex-tools.yaml
 docs/manifests/verified-versions.yaml
 ```
 
@@ -32,5 +39,6 @@ docs/manifests/verified-versions.yaml
   OAuth tokens, bearer tokens, private keys, or passwords here.
 - Prefer public release URLs and plugin selectors over private issue links.
 - Keep one runbook per plugin.
+- Keep one runbook per reusable CLI/tool.
 - Keep reusable prompts in `docs/prompts/`.
 - Keep runtime overlays in `overlays/<plugin>/<version>/`.

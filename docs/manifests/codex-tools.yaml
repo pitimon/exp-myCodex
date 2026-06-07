@@ -1,0 +1,27 @@
+# Public Codex-adjacent tool handoff manifest.
+#
+# Use plugin manifests for Codex plugins. Use this file for CLI tools that are
+# useful around Codex but are not installed through `codex plugin`.
+
+tools:
+  - name: tokentracker
+    display_name: TokenTracker CLI
+    package: "@ipv9/tokentracker-cli"
+    verified_version: "0.39.6"
+    npm_url: https://www.npmjs.com/package/@ipv9/tokentracker-cli
+    repository: https://github.com/pitimon/TokenTracker
+    binaries:
+      - tokentracker
+      - tracker
+      - tokentracker-cli
+      - tokentracker-tracker
+    node: ">=20"
+    runbook: docs/runbooks/tools/tokentracker.md
+    dashboard_command:
+      - npx --yes @ipv9/tokentracker-cli serve --sync --no-open --port 7680
+    sync_command:
+      - npx --yes @ipv9/tokentracker-cli sync --auto
+    smoke_tests:
+      - npx --yes @ipv9/tokentracker-cli --help
+      - npx --yes @ipv9/tokentracker-cli status
+      - npx --yes @ipv9/tokentracker-cli doctor --json

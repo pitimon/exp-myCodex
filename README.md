@@ -1,6 +1,7 @@
 # exp-myCodex
 
-Public handoff materials for installing, updating, and validating Codex plugins.
+Public handoff materials for installing, updating, and validating Codex plugins
+and adjacent CLI tools.
 
 Start here:
 
@@ -16,10 +17,17 @@ docs/runbooks/plugins/8-habit-ai-dev.md
 docs/runbooks/plugins/claude-governance.md
 ```
 
+Extended tool runbooks:
+
+```text
+docs/runbooks/tools/tokentracker.md
+```
+
 Machine-readable references:
 
 ```text
 docs/manifests/codex-plugins.yaml
+docs/manifests/codex-tools.yaml
 docs/manifests/verified-versions.yaml
 ```
 
