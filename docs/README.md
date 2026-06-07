@@ -12,6 +12,13 @@ For a target workstation, use:
 docs/prompts/codex-plugin-validation-prompt.md
 ```
 
+Public mirrors:
+
+```text
+https://github.com/pitimon/exp-myCodex
+https://gitea.ipv9.me/pitimon/exp-myCodex
+```
+
 For exact plugin commands, read the per-plugin runbook:
 
 ```text
@@ -32,6 +39,7 @@ For a compact inventory, read:
 ```text
 docs/manifests/codex-plugins.yaml
 docs/manifests/codex-tools.yaml
+docs/manifests/public-mirrors.yaml
 docs/manifests/verified-versions.yaml
 ```
 

@@ -16,6 +16,13 @@ Start here:
 docs/README.md
 ```
 
+Public mirrors:
+
+```text
+https://github.com/pitimon/exp-myCodex
+https://gitea.ipv9.me/pitimon/exp-myCodex
+```
+
 Primary plugin runbooks:
 
 ```text
@@ -36,6 +43,7 @@ Machine-readable references:
 ```text
 docs/manifests/codex-plugins.yaml
 docs/manifests/codex-tools.yaml
+docs/manifests/public-mirrors.yaml
 docs/manifests/verified-versions.yaml
 ```
 

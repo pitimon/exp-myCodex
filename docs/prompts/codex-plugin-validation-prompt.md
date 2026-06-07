@@ -5,8 +5,9 @@ Use this prompt on a target workstation:
 ```text
 You are installing, updating, or validating Codex plugins on this workstation.
 
-Start by reading this public repo:
+Start by reading one of these public mirrors:
 
+https://github.com/pitimon/exp-myCodex
 https://gitea.ipv9.me/pitimon/exp-myCodex
 
 Then read:

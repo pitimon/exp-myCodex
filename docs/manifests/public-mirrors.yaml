@@ -1,0 +1,21 @@
+# Public mirrors for this handoff repo.
+#
+# Keep both mirrors public-safe and equivalent. Gitea is the original remote in
+# this checkout; GitHub is an additional public mirror for easier sharing.
+
+repository: exp-myCodex
+mirrors:
+  - name: github
+    url: https://github.com/pitimon/exp-myCodex
+    git: https://github.com/pitimon/exp-myCodex.git
+    role: public mirror
+
+  - name: gitea
+    url: https://gitea.ipv9.me/pitimon/exp-myCodex
+    git: https://gitea.ipv9.me/pitimon/exp-myCodex.git
+    role: original public remote
+
+push_policy:
+  - Push `main` to both remotes after public docs changes.
+  - Keep docs, manifests, prompts, and overlays identical on both mirrors.
+  - Do not publish private paths, secrets, raw transcripts, or private issue links.
