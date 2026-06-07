@@ -1,7 +1,8 @@
 # Codex Handoff
 
-This directory documents public-safe setup and validation flows for Codex
-plugins and adjacent CLI tools.
+This directory documents public-safe setup and validation flows from a real
+Codex workstation setup. The intent is to help other people prepare Codex with
+memory, workflow, verification, and token-efficiency habits from day one.
 
 ## Quick Start
 
@@ -22,6 +23,7 @@ docs/runbooks/plugins/claude-mem.md
 For non-plugin tooling, read:
 
 ```text
+docs/runbooks/tools/rtk.md
 docs/runbooks/tools/tokentracker.md
 ```
 
@@ -42,3 +44,5 @@ docs/manifests/verified-versions.yaml
 - Keep one runbook per reusable CLI/tool.
 - Keep reusable prompts in `docs/prompts/`.
 - Keep runtime overlays in `overlays/<plugin>/<version>/`.
+- Write from verified runtime behavior when possible, not from repository state
+  alone.

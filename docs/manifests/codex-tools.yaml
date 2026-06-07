@@ -4,6 +4,21 @@
 # useful around Codex but are not installed through `codex plugin`.
 
 tools:
+  - name: rtk
+    display_name: RTK - Rust Token Killer
+    package_manager: Homebrew
+    package: rtk
+    verified_version: "0.42.3"
+    homepage: https://www.rtk-ai.app/
+    license: Apache-2.0
+    runbook: docs/runbooks/tools/rtk.md
+    install:
+      - brew install rtk
+    smoke_tests:
+      - rtk --version
+      - rtk gain
+      - rtk proxy echo ok
+
   - name: tokentracker
     display_name: TokenTracker CLI
     package: "@ipv9/tokentracker-cli"
