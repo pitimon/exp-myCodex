@@ -36,6 +36,59 @@ docs/prompts/codex-plugin-validation-prompt.md
 The prompt tells the target agent to read the public repo, follow the relevant
 runbooks, verify the active runtime, and avoid printing secrets.
 
+## How The Pieces Fit Together
+
+```text
+                         Public mirrors
+             +------------------------------------+
+             | GitHub: pitimon/exp-myCodex        |
+             | Gitea : pitimon/exp-myCodex        |
+             +------------------+-----------------+
+                                |
+                                v
+                 +------------------------------+
+                 | docs/ + manifests/ + prompts |
+                 | public-safe setup knowledge  |
+                 +---------------+--------------+
+                                 |
+                 target agent reads runbooks
+                                 |
+                                 v
++------------------------------------------------------------------+
+|                              Codex                               |
+|                                                                  |
+|  +----------------------+   +-------------------------------+    |
+|  | Plugin management    |   | Runtime verification          |    |
+|  | codex plugin ...     |   | active cache, MCP, services   |    |
+|  +----------+-----------+   +---------------+---------------+    |
+|             |                               |                    |
+|             v                               v                    |
+|  +----------------------+      +-----------------------------+   |
+|  | 8-Habit AI Dev       |      | claude-mem                  |   |
+|  | workflow discipline  |      | memory hooks + mcp-search   |   |
+|  +----------------------+      +---------------+-------------+   |
+|                                                |                 |
+|  +----------------------+                      v                 |
+|  | Claude Governance    |      +-----------------------------+   |
+|  | ADR/governance       |      | claude-mem worker + SQLite  |   |
+|  +----------------------+      | historical agent memory      |   |
+|                                +-----------------------------+   |
+|                                                                  |
+|  +----------------------+      +-----------------------------+   |
+|  | RTK                  |      | TokenTracker                |   |
+|  | compact command I/O  |      | token/cost visibility       |   |
+|  +----------------------+      +-----------------------------+   |
++------------------------------------------------------------------+
+                 ^
+                 |
+     overlays/ when a plugin needs a reviewed local patch
+```
+
+In short: this repo is the public handoff layer. Codex uses the runbooks and
+manifests to install plugins, verify active runtime state, apply reviewed
+overlays when needed, and add adjacent tools for token visibility and compact
+command output.
+
 ## What Is Included
 
 | Area | Purpose | Start Here |
