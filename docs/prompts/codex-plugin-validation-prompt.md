@@ -31,6 +31,8 @@ Important constraints:
 For claude-mem specifically:
 
 - Start with docs/runbooks/plugins/claude-mem.md.
+- Prefer installing and validating claude-mem with Claude Code first, then use the Codex plugin to connect Codex to the already-working worker.
+- Before any Codex-side install or overlay, run the runbook's Recommended Claude Code First Preflight and report whether the claude-mem worker is already healthy.
 - Do not treat the marketplace snapshot path as the active runtime path.
 - Verify active runtime through worker health workerPath and the installed cache under ~/.codex/plugins/cache/.
 - If applying the local overlay, require claude-mem version 13.4.0 and then run:

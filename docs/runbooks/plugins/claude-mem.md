@@ -209,6 +209,47 @@ memories = true
 
 `obsidian-vault` in `codex mcp list` is not required for `claude-mem` health.
 
+## Recommended Claude Code First Preflight
+
+Recommended order for a new workstation:
+
+1. Install and validate `claude-mem` with Claude Code first.
+2. Confirm the shared `claude-mem` worker is healthy.
+3. Then install or update the Codex `claude-mem` plugin.
+
+The practical reason is that `claude-mem` may already be installed and working
+through Claude Code. In that case, the Codex task is mostly to connect Codex to
+the existing runtime through plugin hooks and `mcp-search`, not to overwrite a
+healthy worker.
+
+Use this preflight before any Codex-side install or overlay:
+
+```bash
+test -d ~/.claude-mem && printf 'claude_mem_home=present\n' || printf 'claude_mem_home=missing\n'
+test -f ~/.claude-mem/settings.json && printf 'settings=present\n' || printf 'settings=missing\n'
+test -f ~/.claude-mem/worker.pid && jq '{pid,port,startedAt}' ~/.claude-mem/worker.pid || true
+curl -fsS http://127.0.0.1:37701/api/health | jq . || true
+```
+
+Check secret presence only, not secret values:
+
+```bash
+if [ -f ~/.claude-mem/settings.json ]; then
+  jq '{
+    CLAUDE_MEM_PROVIDER,
+    CLAUDE_MEM_MODEL,
+    CLAUDE_MEM_WORKER_HOST,
+    CLAUDE_MEM_WORKER_PORT,
+    has_openrouter_key: (.CLAUDE_MEM_OPENROUTER_API_KEY | type == "string" and length > 0),
+    openrouter_key_length: (.CLAUDE_MEM_OPENROUTER_API_KEY | if type == "string" then length else 0 end)
+  }' ~/.claude-mem/settings.json
+fi
+```
+
+If the worker is already healthy, continue with the Codex plugin install and
+post-install verification. If the worker is missing or unhealthy, fix the
+Claude Code `claude-mem` install first, then return to this runbook.
+
 ## Install claude-mem Plugin
 
 Use this on a workstation that does not yet have the Codex `claude-mem`
