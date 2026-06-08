@@ -40,6 +40,7 @@ For claude-mem specifically:
 - Verify active runtime through worker health workerPath and the installed cache under ~/.codex/plugins/cache/.
 - If `CLAUDE_MEM_CHROMA_ENABLED=true`, verify `uvx` is installed and visible to the worker. Install `uv/uvx` or explicitly report Chroma as skipped/unhealthy before calling vector search healthy.
 - Verify `scripts/version-check.js` against the active Codex cache and check for `.install-version` there; do not assume the Claude Code cache marker applies to Codex.
+- Prefer `node scripts/claude-mem-codex-compat.cjs inspect|apply|verify --json` from this repo for version-aware overlay handling.
 - If applying the local overlay, match the active claude-mem version to the overlay directory.
 - If no overlay exists for the active claude-mem version, do not apply an older overlay. Report `overlay=missing_for_version:<version>` and run the runbook's Version Drift Policy discovery checks.
 - For claude-mem 13.4.0, run `node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced` after applying the overlay.

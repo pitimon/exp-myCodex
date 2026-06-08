@@ -34,6 +34,12 @@ docs/runbooks/tools/rtk.md
 docs/runbooks/tools/tokentracker.md
 ```
 
+For version-aware compatibility helpers, read:
+
+```text
+scripts/claude-mem-codex-compat.cjs
+```
+
 For a compact inventory, read:
 
 ```text
@@ -52,5 +58,6 @@ docs/manifests/verified-versions.yaml
 - Keep one runbook per reusable CLI/tool.
 - Keep reusable prompts in `docs/prompts/`.
 - Keep runtime overlays in `overlays/<plugin>/<version>/`.
+- Keep executable compatibility helpers in `scripts/`.
 - Write from verified runtime behavior when possible, not from repository state
   alone.

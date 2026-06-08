@@ -101,6 +101,7 @@ command output.
 | RTK | Token-optimized shell command proxy | `docs/runbooks/tools/rtk.md` |
 | Manifests | Machine-readable plugin, tool, mirror, and version inventory | `docs/manifests/` |
 | Runtime overlays | Reviewed local patch overlays when a plugin needs them | `overlays/` |
+| Compatibility helpers | Version-aware inspection, overlay apply, and verification scripts | `scripts/` |
 
 ## Repository Map
 
@@ -119,6 +120,9 @@ docs/
     tools/
 overlays/
   claude-mem/13.4.0/
+  claude-mem/13.4.1/
+scripts/
+  claude-mem-codex-compat.cjs
 ```
 
 ## Operating Principles

@@ -156,6 +156,24 @@ version as a new runtime contract until verified. The goal is not to pin users
 forever; it is to avoid silently applying stale hook patches to a changed
 bundle.
 
+Preferred workflow from this repo:
+
+```bash
+node scripts/claude-mem-codex-compat.cjs inspect --json
+node scripts/claude-mem-codex-compat.cjs apply --json
+node scripts/claude-mem-codex-compat.cjs verify --json
+```
+
+Exit behavior:
+
+- `inspect` is read-only and reports active cache, version, overlay presence,
+  hook state, install marker, and skill description issues.
+- `apply` backs up matching files, applies only the overlay whose directory
+  exactly matches the active cache version, and exits `2` if no overlay exists.
+- `verify` exits non-zero if required hook events are missing, hook files still
+  contain top-level `suppressOutput`, `.install-version` is missing, or any
+  skill description exceeds Codex limits.
+
 Version handling rules:
 
 - Use the active Codex cache version, not the marketplace listing alone.
@@ -171,6 +189,12 @@ Version handling rules:
   checks below.
 
 Version drift discovery:
+
+```bash
+node scripts/claude-mem-codex-compat.cjs inspect --json
+```
+
+Manual fallback:
 
 ```bash
 PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
@@ -548,6 +572,13 @@ If those files are missing and this repo has matching overlay assets, apply the
 reviewed overlay only after the version guard passes.
 
 Use the overlay that matches the active plugin version:
+
+```bash
+node scripts/claude-mem-codex-compat.cjs apply --json
+node scripts/claude-mem-codex-compat.cjs verify --json
+```
+
+Manual fallback:
 
 ```bash
 VERSION=$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")
