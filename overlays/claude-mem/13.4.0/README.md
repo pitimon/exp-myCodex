@@ -56,4 +56,9 @@ context command produces no stdout. This prevents an empty Codex warm-up turn
 from being reported as a hard startup failure while still preserving real
 context output when available.
 
+The worker start hooks also emit only a single `{"continue":true}` hook result.
+They intentionally discard the worker start command's own status JSON because
+some Codex hook paths report a `SessionStart Failed` warning when a startup
+hook emits additional fields or multiple JSON documents.
+
 Do not put API keys or machine-local secrets in this directory.
