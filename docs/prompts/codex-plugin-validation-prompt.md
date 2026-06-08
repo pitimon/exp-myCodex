@@ -39,9 +39,12 @@ For claude-mem specifically:
 - Do not treat the marketplace snapshot path as the active runtime path.
 - Verify active runtime through worker health workerPath and the installed cache under ~/.codex/plugins/cache/.
 - If `CLAUDE_MEM_CHROMA_ENABLED=true`, verify `uvx` is installed and visible to the worker. Install `uv/uvx` or explicitly report Chroma as skipped/unhealthy before calling vector search healthy.
+- Verify `scripts/version-check.js` against the active Codex cache and check for `.install-version` there; do not assume the Claude Code cache marker applies to Codex.
 - If applying the local overlay, match the active claude-mem version to the overlay directory.
 - For claude-mem 13.4.0, run `node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced` after applying the overlay.
 - For claude-mem 13.4.1, apply the minimal overlay to both the active cache and marketplace snapshot when present; it fixes `skills/standup/SKILL.md` description length and startup hook output shape.
+- For claude-mem 13.4.1, verify the Codex `PostToolUse` hook output does not contain top-level `suppressOutput`; the overlay includes `scripts/codex-hook-output-filter.js`.
+- To validate recent-context injection, run the runbook's Codex-shaped `SessionStart` payload probe. Do not use `{}` as the probe payload.
 - Run the Post-Install And Post-Update Verification section before calling healthy.
 - If `sqlite3` is missing, report that exact skip and use worker health, logs, MCP search, and observation-write evidence instead of pretending SQL verification passed.
 - A warm-up reply of exact `Ready.` is necessary but not sufficient. If Codex human-readable output shows an aggregate `SessionStart Failed`, collect direct hook-script checks and JSON-mode Codex output and report the residual warning.

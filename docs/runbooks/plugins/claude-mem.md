@@ -122,6 +122,33 @@ claude-mem: runtime not yet set up - run: npx claude-mem@latest install
 do not treat that line as final truth. Verify the worker, MCP path, logs, and
 real memory lookup before deciding the runtime is broken.
 
+If a `CAPTURE_BROKEN` marker appears while running hook commands by hand, treat
+it as a diagnostic side effect until proven otherwise. Empty stdin hook probes
+can create misleading diagnostics. Check `version-check.js`, `.install-version`,
+worker status, and hook stdout shape before treating `CAPTURE_BROKEN` as the
+root cause.
+
+For `claude-mem`, Codex and Claude Code can load different plugin trees. A
+healthy Claude Code runtime does not prove that the active Codex cache has the
+same install marker or hook files.
+
+Common roots:
+
+```text
+Claude Code cache: ~/.claude/plugins/cache/thedotmack/claude-mem/<version>/
+Claude marketplace: ~/.claude/plugins/marketplaces/thedotmack/plugin/
+Codex cache: ~/.codex/plugins/cache/claude-mem-local/claude-mem/<version>/
+Codex marketplace snapshot: ~/.codex/.tmp/marketplaces/claude-mem-local/plugin/
+```
+
+Always identify the active Codex cache before debugging Codex startup:
+
+```bash
+PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+printf 'active_codex_plugin=%s\n' "$PLUGIN"
+jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
+```
+
 ## Warm-Up-Only Session Prompt
 
 Use this when the only goal is to let configured startup context and hooks
@@ -456,6 +483,7 @@ for f in \
   hooks/codex-hooks.json \
   hooks/hooks.json \
   skills/standup/SKILL.md \
+  scripts/codex-hook-output-filter.js \
   scripts/worker-service.cjs \
   scripts/transcript-watcher.cjs \
   scripts/codex-hook-spool.cjs \
@@ -520,24 +548,40 @@ jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 
 ```bash
 node --check "$PLUGIN/scripts/worker-service.cjs"
-node --check "$PLUGIN/scripts/transcript-watcher.cjs"
-node --check "$PLUGIN/scripts/codex-hook-spool.cjs"
-node --check "$PLUGIN/scripts/codex-hook-drain.cjs"
-node --check "$PLUGIN/scripts/codex-hook-mode.cjs"
+for script in \
+  transcript-watcher.cjs \
+  codex-hook-spool.cjs \
+  codex-hook-drain.cjs \
+  codex-hook-mode.cjs \
+  codex-hook-output-filter.js
+do
+  if [ -f "$PLUGIN/scripts/$script" ]; then
+    node --check "$PLUGIN/scripts/$script"
+  else
+    printf 'optional_script_missing=%s\n' "$script"
+  fi
+done
 
 jq -e '.hooks.SessionStart and .hooks.UserPromptSubmit and .hooks.PostToolUse and .hooks.Stop' \
   "$PLUGIN/hooks/codex-hooks.json" >/dev/null
 
-node "$PLUGIN/scripts/codex-hook-mode.cjs" status
+if [ -f "$PLUGIN/scripts/codex-hook-mode.cjs" ]; then
+  node "$PLUGIN/scripts/codex-hook-mode.cjs" status
+fi
 ```
 
 3. Verify Codex does not reject legacy hook output fields.
 
 ```bash
 ! rg -n 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
-  "$PLUGIN/scripts/worker-service.cjs" \
   "$PLUGIN/hooks/codex-hooks.json" \
   "$PLUGIN/hooks/hooks.json"
+
+if [ -f "$PLUGIN/scripts/codex-hook-output-filter.js" ]; then
+  printf '%s\n' '{"continue":true,"suppressOutput":true}' |
+    node "$PLUGIN/scripts/codex-hook-output-filter.js" --event PostToolUse |
+    jq -e '.continue == true and has("suppressOutput") == false'
+fi
 
 if [ -f ~/.codex/scripts/codex-stop-obsidian-capture.cjs ]; then
   ! rg -n 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
@@ -604,6 +648,66 @@ shows one aggregate `SessionStart Failed`, collect JSON-mode output and direct
 hook-script exit codes before deciding the runtime is broken. The model reply
 can be `Ready.` while one best-effort context hook failed open.
 
+8. If Codex still prints `claude-mem: runtime not yet set up`, verify the
+active Codex cache install marker, not only the Claude Code cache:
+
+```bash
+PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+test -f "$PLUGIN/.install-version" && cat "$PLUGIN/.install-version"
+node "$PLUGIN/scripts/version-check.js"
+```
+
+If `version-check.js` reports runtime missing while `npx claude-mem status`
+shows the worker is running, the Codex cache may be missing `.install-version`.
+Re-run the installer, or copy/create the marker only after confirming the
+installed runtime version:
+
+```bash
+npx claude-mem@latest install
+npx claude-mem start
+npx claude-mem status
+
+test -f "$PLUGIN/.install-version" || printf '%s\n' \
+  "{\"version\":\"$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")\",\"installedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" \
+  > "$PLUGIN/.install-version"
+chmod 600 "$PLUGIN/.install-version"
+node "$PLUGIN/scripts/version-check.js"
+```
+
+9. Validate recent-context injection with a real Codex-shaped `SessionStart`
+payload. A direct hook probe with `{}` is not sufficient because the adapter
+needs a session id, event name, cwd, and source.
+
+```bash
+PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PAYLOAD=$(mktemp)
+cat > "$PAYLOAD" <<JSON
+{"session_id":"codex-context-probe","hook_event_name":"SessionStart","cwd":"$PWD","source":"startup","transcript_path":"/tmp/codex-context-probe.jsonl"}
+JSON
+
+cat "$PAYLOAD" |
+  node "$PLUGIN/scripts/bun-runner.js" \
+    "$PLUGIN/scripts/worker-service.cjs" \
+    hook codex context |
+  jq '{
+    has_systemMessage: (.systemMessage | type == "string" and length > 0),
+    has_additionalContext: (.hookSpecificOutput.additionalContext | type == "string" and length > 0),
+    preview: ((.hookSpecificOutput.additionalContext // .systemMessage // "") | split("\n")[0:4])
+  }'
+
+rm -f "$PAYLOAD"
+```
+
+Expected: `has_systemMessage=true` and/or `has_additionalContext=true`, with a
+preview that starts with the recent-context heading. Codex may not display the
+block as visibly as Claude Code, but this proves the hook can produce the
+context payload Codex receives.
+
+An empty or nearly empty workspace can still warm the session and load memory,
+but it will not create meaningful codebase context by itself. For codebase
+ingestion, open Codex in the source repository and use normal work, MCP memory
+lookup, or the relevant codebase-learning workflow.
+
 ## Runtime Verification
 
 Prefer these checks over startup warnings.
@@ -620,6 +724,11 @@ done
 
 ps -axo pid,command | grep -E 'claude-mem|worker-service' | grep -v grep || true
 ```
+
+Inside normal Codex tool execution, sandbox settings may isolate PID and
+network namespaces. If `curl 127.0.0.1:<port>` or `ps` disagrees with
+`npx claude-mem status`, verify once from a trusted host shell outside the
+Codex sandbox before reinstalling the runtime.
 
 Expected:
 
@@ -759,8 +868,9 @@ package.json                    deba50feb85520007901bee93aa7625e329e6798d5293728
 Current 2026-06-08 active `13.4.1` overlay checksums:
 
 ```text
-hooks/codex-hooks.json          560b215314b62ded51d592b617677cb9d1437d161f39e7db9c36ffb67fc3bf6c
+hooks/codex-hooks.json          81695d5fd3cd80d982c926e1d584ee1b4cf19e5dbf2a6054869873966571234e
 hooks/hooks.json                2108155263a3defcd23d55d19f14161037d74ea898a2ca4e2699871d252874a8
+scripts/codex-hook-output-filter.js ef4fe381b8030b75614def687049621f055d4150a5a2520fa7e1ab02fc7905da
 skills/standup/SKILL.md         3fb07d07acad20b6b6e5e8a8391ad90b8c08615749e4c268d281b9cc672e14a3
 ```
 
@@ -769,12 +879,11 @@ Syntax and hook checks:
 ```bash
 PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
 node --check "$PLUGIN/scripts/worker-service.cjs"
-node --check "$PLUGIN/scripts/transcript-watcher.cjs"
-node --check "$PLUGIN/scripts/codex-hook-spool.cjs"
+test -f "$PLUGIN/scripts/transcript-watcher.cjs" && node --check "$PLUGIN/scripts/transcript-watcher.cjs"
+test -f "$PLUGIN/scripts/codex-hook-spool.cjs" && node --check "$PLUGIN/scripts/codex-hook-spool.cjs"
 jq -e '.hooks.SessionStart and .hooks.UserPromptSubmit and .hooks.PostToolUse and .hooks.Stop' \
   "$PLUGIN/hooks/codex-hooks.json" >/dev/null
 ! rg -n 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
-  "$PLUGIN/scripts/worker-service.cjs" \
   "$PLUGIN/hooks/codex-hooks.json" \
   "$PLUGIN/hooks/hooks.json"
 ```
