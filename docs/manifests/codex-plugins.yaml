@@ -27,7 +27,7 @@ plugins:
     marketplace: pitimon-8-habit-ai-dev
     selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev
     source: pitimon/8-habit-ai-dev
-    verified_version: "2.21.9"
+    verified_version: "2.21.10"
     runbook: docs/runbooks/plugins/8-habit-ai-dev.md
     codex_install:
       - codex plugin marketplace add pitimon/8-habit-ai-dev
@@ -42,8 +42,8 @@ plugins:
     marketplace: pitimon-claude-governance
     selector: claude-governance@pitimon-claude-governance
     source: pitimon/claude-governance
-    verified_version: "3.4.0"
-    release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.0
+    verified_version: "3.4.1"
+    release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.1
     runbook: docs/runbooks/plugins/claude-governance.md
     codex_install:
       - codex plugin marketplace add pitimon/claude-governance

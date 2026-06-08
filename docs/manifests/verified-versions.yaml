@@ -14,16 +14,18 @@ plugins:
 
   8-habit-ai-dev:
     selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev
-    version: "2.21.9"
+    version: "2.21.10"
     notes:
       - Profile and skills load at Codex startup when plugin is enabled.
+      - Re-verified from the active Codex cache on a Linux test workstation.
 
   claude-governance:
     selector: claude-governance@pitimon-claude-governance
-    version: "3.4.0"
-    release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.0
+    version: "3.4.1"
+    release: https://github.com/pitimon/claude-governance/releases/tag/v3.4.1
     notes:
       - Governance skills load at Codex startup when plugin is enabled.
+      - v3.4.1 release is public and fixes Linux Claude Code install compatibility.
 
 tools:
   rtk:

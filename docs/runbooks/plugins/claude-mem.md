@@ -62,7 +62,8 @@ Verified on 2026-06-08:
 ```text
 worker health endpoint: http://127.0.0.1:37701/api/health
 worker status: ok
-worker version: 13.4.0
+worker runtime version: 13.4.0
+Codex plugin versions verified: 13.4.0, 13.4.1
 worker path: a current-user claude-mem worker-service.cjs path
 worker provider: claude
 worker auth: Claude Code OAuth token read from system keychain at spawn
@@ -86,11 +87,14 @@ settings.failed-claude-provider-20260607-052940.json
 settings.claude-provider-working-20260607-080233.json
 ```
 
+The worker runtime and Codex plugin cache can legitimately report different
+versions. On the Linux test workstation, the shared worker runtime reported
+`13.4.0` while the active Codex plugin cache reported `13.4.1`. Treat worker
+health version and Codex plugin version as separate facts.
+
 The live `provider=claude` state was previously verified to write real
-observations after the empty/warm-up poisoning issue was isolated. The residual
-risk is still the empty case: repeated no-work turns can produce prose instead
-of XML and poison the SDK session. Do not interpret that as proof that
-substantive work cannot be stored.
+observations after the empty/warm-up poisoning issue was isolated. Do not use a
+no-op warm-up alone as proof that substantive work cannot be stored.
 
 ## Important Paths
 
@@ -883,7 +887,7 @@ Expected local highlights:
 
 ```text
 mcp-search      enabled
-claude-mem@claude-mem-local installed, enabled, 13.4.0
+claude-mem@claude-mem-local installed, enabled, 13.4.0 or 13.4.1
 ```
 
 Do not confuse the marketplace snapshot path shown by `codex plugin list` with
@@ -951,7 +955,7 @@ jq '.hooks | keys' "$PLUGIN/hooks/codex-hooks.json"
 Active installed cache:
 
 ```text
-~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.0/
+~/.codex/plugins/cache/claude-mem-local/claude-mem/<version>/
 ```
 
 Marketplace snapshot:

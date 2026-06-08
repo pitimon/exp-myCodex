@@ -41,7 +41,7 @@ Start a fresh Codex session and confirm governance skills are available.
 ## Release
 
 ```text
-https://github.com/pitimon/claude-governance/releases/tag/v3.4.0
+https://github.com/pitimon/claude-governance/releases/tag/v3.4.1
 ```
 
 ## Troubleshooting
