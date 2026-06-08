@@ -26,11 +26,14 @@ plugins:
 tools:
   rtk:
     package: rtk
-    package_manager: Homebrew
+    package_manager:
+      - Homebrew
+      - official release installer
     version: "0.42.3"
     homepage: https://www.rtk-ai.app/
     notes:
-      - brew info returned public Homebrew metadata.
+      - Homebrew install verified on macOS.
+      - Official release installer verified on Linux and WSL-style environments.
       - rtk gain was verified against local command-history savings.
 
   tokentracker:

@@ -6,7 +6,9 @@
 tools:
   - name: rtk
     display_name: RTK - Rust Token Killer
-    package_manager: Homebrew
+    package_manager:
+      - Homebrew
+      - official release installer
     package: rtk
     verified_version: "0.42.3"
     homepage: https://www.rtk-ai.app/
@@ -14,6 +16,8 @@ tools:
     runbook: docs/runbooks/tools/rtk.md
     install:
       - brew install rtk
+      - curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/master/install.sh -o /tmp/rtk-install.sh
+      - RTK_VERSION=v0.42.3 sh /tmp/rtk-install.sh
     smoke_tests:
       - rtk --version
       - rtk gain

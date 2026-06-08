@@ -27,6 +27,7 @@ Verified on 2026-06-08:
 rtk version: 0.42.3
 install path: /opt/homebrew/bin/rtk
 install source: Homebrew formula rtk
+Linux install source: official rtk-ai/rtk release installer
 homepage: https://www.rtk-ai.app/
 license: Apache-2.0
 ```
@@ -48,6 +49,20 @@ macOS with Homebrew:
 brew install rtk
 rtk --version
 ```
+
+Linux or WSL with the official release installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/master/install.sh -o /tmp/rtk-install.sh
+less /tmp/rtk-install.sh
+RTK_VERSION=v0.42.3 sh /tmp/rtk-install.sh
+
+export PATH="$HOME/.local/bin:$PATH"
+rtk --version
+```
+
+If `rtk` is installed into `~/.local/bin`, add that directory to the user's
+shell startup file before using it in future Codex sessions.
 
 If another platform package is used, verify it independently:
 
@@ -120,6 +135,9 @@ Expected:
 - `rtk --version` prints a version.
 - `rtk gain` prints savings analytics.
 - `rtk proxy echo ok` prints `ok`.
+- `rtk gain` may warn that no shell hook is installed. That is acceptable for
+  manual `rtk ...` and `rtk proxy ...` use. Run `rtk init -g` only if the user
+  intentionally wants global automatic shell integration.
 
 ## Guardrails
 

@@ -162,6 +162,12 @@ Use a user service when the dashboard is for one account:
 ```bash
 mkdir -p ~/.config/systemd/user ~/.tokentracker/tracker/logs
 
+NODE_BIN=$(command -v node)
+NPX_BIN=$(command -v npx)
+NODE_DIR=$(dirname "$NODE_BIN")
+test -x "$NODE_BIN"
+test -x "$NPX_BIN"
+
 cat > ~/.config/systemd/user/tokentracker-dashboard.service <<'UNIT'
 [Unit]
 Description=TokenTracker dashboard
@@ -169,7 +175,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/env npx --yes @ipv9/tokentracker-cli serve --sync --no-open --port 7680
+Environment=PATH=__NODE_DIR__:/usr/local/bin:/usr/bin:/bin
+ExecStart=__NPX_BIN__ --yes @ipv9/tokentracker-cli@0.39.6 serve --sync --no-open --port 7680
 Restart=always
 RestartSec=5
 WorkingDirectory=%h
@@ -178,9 +185,18 @@ WorkingDirectory=%h
 WantedBy=default.target
 UNIT
 
+sed -i.bak "s#__NODE_DIR__#$NODE_DIR#g; s#__NPX_BIN__#$NPX_BIN#g" \
+  ~/.config/systemd/user/tokentracker-dashboard.service
+rm -f ~/.config/systemd/user/tokentracker-dashboard.service.bak
+
 systemctl --user daemon-reload
 systemctl --user enable --now tokentracker-dashboard.service
 ```
+
+The explicit `Environment=PATH=...` is required on systems where Node is
+installed through NVM, Volta, asdf, or another user-local manager. Without it,
+`systemd --user` can find `npx` but the package may still fail with
+`/usr/bin/env: 'node': No such file or directory`.
 
 Enable linger if the service must survive after logout:
 
@@ -197,8 +213,14 @@ Description=TokenTracker local sync
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/env npx --yes @ipv9/tokentracker-cli sync --auto
+Environment=PATH=__NODE_DIR__:/usr/local/bin:/usr/bin:/bin
+ExecStart=__NPX_BIN__ --yes @ipv9/tokentracker-cli@0.39.6 sync --auto
+WorkingDirectory=%h
 UNIT
+
+sed -i.bak "s#__NODE_DIR__#$NODE_DIR#g; s#__NPX_BIN__#$NPX_BIN#g" \
+  ~/.config/systemd/user/tokentracker-sync.service
+rm -f ~/.config/systemd/user/tokentracker-sync.service.bak
 
 cat > ~/.config/systemd/user/tokentracker-sync.timer <<'UNIT'
 [Unit]
@@ -224,6 +246,7 @@ systemctl --user status tokentracker-dashboard.service
 systemctl --user list-timers tokentracker-sync.timer
 journalctl --user -u tokentracker-dashboard.service -n 100 --no-pager
 curl -fsS http://127.0.0.1:7680/ >/dev/null
+npx --yes @ipv9/tokentracker-cli@0.39.6 doctor --json
 ```
 
 Uninstall:
@@ -414,6 +437,9 @@ If a service cannot find `npx`, use an absolute path from:
 command -v npx
 command -v node
 ```
+
+For Linux `systemd --user`, set both an absolute `ExecStart=` path to `npx` and
+an `Environment=PATH=...` containing the directory that holds `node`.
 
 On macOS with Homebrew Node, service commands may need `/opt/homebrew/bin/npx`
 or `/usr/local/bin/npx` instead of `/usr/bin/env npx`.

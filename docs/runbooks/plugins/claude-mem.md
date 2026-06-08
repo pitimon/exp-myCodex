@@ -59,7 +59,7 @@ Verified on 2026-06-08:
 worker health endpoint: http://127.0.0.1:37701/api/health
 worker status: ok
 worker version: 13.4.0
-worker path: ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.0/scripts/worker-service.cjs
+worker path: a current-user claude-mem worker-service.cjs path
 worker provider: claude
 worker auth: Claude Code OAuth token read from system keychain at spawn
 settings provider: CLAUDE_MEM_PROVIDER=claude
@@ -68,9 +68,11 @@ OpenRouter rollback model retained: google/gemini-2.5-flash-lite
 CLAUDE_MEM_CODEX_TRANSCRIPT_INGESTION=false
 ```
 
-Other workstations may use port `37777` instead of `37701`. Always verify the
-actual worker port from `~/.claude-mem/worker.pid`, settings, health probes, or
-the live worker process before declaring the runtime unhealthy.
+Other workstations may use port `37777` instead of `37701`. Multi-user hosts can
+also have both ports healthy at once, where one port belongs to another user.
+Always verify the actual worker port from `~/.claude-mem/worker.pid`, settings,
+health probes, and the live worker process before declaring the runtime healthy
+or unhealthy.
 
 Rollback snapshots currently exist under `~/.claude-mem/backups/`, including:
 
@@ -140,6 +142,20 @@ Use a quoted prompt so shell history and wrappers preserve the exact text:
 
 ```bash
 codex 'Session warm-up only. Load configured startup context and initialize hooks. Do not run tools, inspect files, or modify anything. Reply exactly: Ready.'
+```
+
+On machines where Node and Codex are installed through NVM, a non-login SSH
+shell may not have `codex`, `node`, or `npx` on `PATH`. Initialize NVM or use
+the absolute Codex path before running validation:
+
+```bash
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+fi
+
+command -v codex
+command -v node
+command -v npx
 ```
 
 If using the local interactive wrapper:
@@ -241,6 +257,11 @@ done
 ps -axo pid,command | grep -E 'claude-mem|worker-service' | grep -v grep || true
 ```
 
+For each healthy candidate port, confirm the health `workerPath` belongs to the
+current user's expected `claude-mem` runtime. A `200 OK` health response from
+another user's worker, an older version, or a different home directory is not
+evidence that this account's Codex runtime is healthy.
+
 Check secret presence only, not secret values:
 
 ```bash
@@ -248,12 +269,37 @@ if [ -f ~/.claude-mem/settings.json ]; then
   jq '{
     CLAUDE_MEM_PROVIDER,
     CLAUDE_MEM_MODEL,
+    CLAUDE_MEM_OPENROUTER_MODEL,
     CLAUDE_MEM_WORKER_HOST,
     CLAUDE_MEM_WORKER_PORT,
+    CLAUDE_MEM_CODEX_TRANSCRIPT_INGESTION,
+    CLAUDE_MEM_CHROMA_ENABLED,
     has_openrouter_key: (.CLAUDE_MEM_OPENROUTER_API_KEY | type == "string" and length > 0),
     openrouter_key_length: (.CLAUDE_MEM_OPENROUTER_API_KEY | if type == "string" then length else 0 end)
   }' ~/.claude-mem/settings.json
 fi
+```
+
+If `CLAUDE_MEM_CHROMA_ENABLED=true`, verify `uvx` is available in the worker
+environment before calling Chroma-backed search healthy:
+
+```bash
+command -v uvx || command -v uv || true
+tail -n 160 ~/.claude-mem/logs/claude-mem-$(date +%Y-%m-%d).log 2>/dev/null |
+  rg 'CHROMA|uvx|chroma-mcp|Executable not found|Connected to chroma-mcp'
+```
+
+If `uvx` is missing on Linux or WSL, install `uv` from the official Astral
+installer and restart the worker with `~/.local/bin` on `PATH`:
+
+```bash
+curl -fsSL https://astral.sh/uv/install.sh -o /tmp/uv-install.sh
+less /tmp/uv-install.sh
+UV_NO_MODIFY_PATH=1 sh /tmp/uv-install.sh
+export PATH="$HOME/.local/bin:$PATH"
+npx claude-mem@latest restart
+uv --version
+uvx --version
 ```
 
 If the worker is already healthy, continue with the Codex plugin install and
@@ -519,10 +565,23 @@ sqlite3 -header -column ~/.claude-mem/claude-mem.db \
 In Codex, verify `mcp-search` can search or fetch a known observation when the
 MCP tool is available.
 
+If `sqlite3` is not installed, do not block the whole validation on the SQL
+queries. Report `sqlite3=missing`, verify the database file exists, and rely on
+worker health, logs, MCP search, and a fresh observation write until `sqlite3`
+can be installed:
+
+```bash
+command -v sqlite3 || printf 'sqlite3=missing\n'
+test -f ~/.claude-mem/claude-mem.db && printf 'database=present\n'
+```
+
 7. Start a fresh Codex session and run the warm-up prompt.
 
 Expected result: exact `Ready.`, with no hook JSON error, hook exit-code error,
-or `unsupported suppressOutput` message.
+or `unsupported suppressOutput` message. If human-readable Codex output still
+shows one aggregate `SessionStart Failed`, collect JSON-mode output and direct
+hook-script exit codes before deciding the runtime is broken. The model reply
+can be `Ready.` while one best-effort context hook failed open.
 
 ## Runtime Verification
 
@@ -553,6 +612,10 @@ At least one candidate port, the port recorded in `worker.pid`, or a
 discovered worker process should explain where the worker is running. If both
 candidate ports fail but a worker process exists, inspect its environment,
 settings, and logs before reinstalling.
+
+On shared machines, match the health `workerPath`, `worker.pid`, and process
+owner to the current account. Do not reuse a different user's healthy
+`claude-mem` worker as evidence for this account.
 
 Settings without secrets:
 
@@ -665,7 +728,7 @@ Current 2026-06-08 active checksums:
 ```text
 scripts/worker-service.cjs      08406909758972eeaf8b95883e41f540b997d4e90d6badd76407f62f0b87ab1c
 modes/code.json                 77b1755e13bf52e1f4382e6650df6fe7df8f4d14aaac6abbd31db2ef4d28354b
-hooks/codex-hooks.json          0a4e251df6f01374578c3e7e423870ca909f1c6c6ea49ab3055426721b3c79c0
+hooks/codex-hooks.json          3149ede32a0c26dd31fc1e4bed14652fed65dc27f9960d817040cbb2e1028123
 hooks/hooks.json                6ab34e345e29314c29f794ea2b13a9a6e9841802d2ea7466934cd96ac27d7936
 scripts/transcript-watcher.cjs  a25cc63bfff5ad520b3eba00dac3150d0804a7b13b29c6c71c1c753f529c2b33
 .mcp.json                       bcbfabb39432fed47e9970f607e761f2c30b74eef3197dbaa0216feb5d24f304
