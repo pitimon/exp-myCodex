@@ -30,6 +30,10 @@ When inspecting `~/.claude-mem/settings.json`, print only boolean secret
 presence and length. Do not run broad secret scans against local config files
 while memory hooks are enabled.
 
+Some verification snippets use `rg` for concise filtering. If `rg` is missing
+on the target workstation, use `grep` for the same narrow pattern or report
+`ripgrep=missing` rather than skipping the rest of the runtime validation.
+
 ## Architecture
 
 ```text
@@ -516,7 +520,8 @@ node "$PLUGIN/scripts/codex-hook-mode.cjs" status
 ```bash
 ! rg -n 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
   "$PLUGIN/scripts/worker-service.cjs" \
-  "$PLUGIN/hooks/codex-hooks.json"
+  "$PLUGIN/hooks/codex-hooks.json" \
+  "$PLUGIN/hooks/hooks.json"
 
 if [ -f ~/.codex/scripts/codex-stop-obsidian-capture.cjs ]; then
   ! rg -n 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
@@ -729,7 +734,7 @@ Current 2026-06-08 active checksums:
 scripts/worker-service.cjs      08406909758972eeaf8b95883e41f540b997d4e90d6badd76407f62f0b87ab1c
 modes/code.json                 77b1755e13bf52e1f4382e6650df6fe7df8f4d14aaac6abbd31db2ef4d28354b
 hooks/codex-hooks.json          3149ede32a0c26dd31fc1e4bed14652fed65dc27f9960d817040cbb2e1028123
-hooks/hooks.json                6ab34e345e29314c29f794ea2b13a9a6e9841802d2ea7466934cd96ac27d7936
+hooks/hooks.json                d9df488bc98c51ea3011d0a4d82bf10aee19e9e02229b722c25a902366584d37
 scripts/transcript-watcher.cjs  a25cc63bfff5ad520b3eba00dac3150d0804a7b13b29c6c71c1c753f529c2b33
 .mcp.json                       bcbfabb39432fed47e9970f607e761f2c30b74eef3197dbaa0216feb5d24f304
 package.json                    deba50feb85520007901bee93aa7625e329e6798d52937285fd252c7f5facfb1
@@ -745,7 +750,9 @@ node --check "$PLUGIN/scripts/codex-hook-spool.cjs"
 jq -e '.hooks.SessionStart and .hooks.UserPromptSubmit and .hooks.PostToolUse and .hooks.Stop' \
   "$PLUGIN/hooks/codex-hooks.json" >/dev/null
 ! rg -n 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
-  "$PLUGIN/scripts/worker-service.cjs" "$PLUGIN/hooks/codex-hooks.json"
+  "$PLUGIN/scripts/worker-service.cjs" \
+  "$PLUGIN/hooks/codex-hooks.json" \
+  "$PLUGIN/hooks/hooks.json"
 ```
 
 ## Provider Changes

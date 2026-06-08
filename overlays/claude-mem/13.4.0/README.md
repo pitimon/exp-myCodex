@@ -50,9 +50,10 @@ intentionally does not include the older Codex wrapper files
 or the old regression test, because the active installed cache no longer uses
 that topology.
 
-The `SessionStart` context hook is wrapped to fail open with
-`{"continue":true}` when the context command produces no stdout. This prevents
-an empty Codex warm-up turn from being reported as a hard startup failure while
-still preserving real context output when available.
+The `SessionStart` context hooks in both `hooks/codex-hooks.json` and
+`hooks/hooks.json` are wrapped to fail open with `{"continue":true}` when the
+context command produces no stdout. This prevents an empty Codex warm-up turn
+from being reported as a hard startup failure while still preserving real
+context output when available.
 
 Do not put API keys or machine-local secrets in this directory.

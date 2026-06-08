@@ -28,6 +28,7 @@ Important constraints:
 - If a plugin requires a runtime overlay, verify the plugin version and active installed cache path before applying it.
 - Restart Codex after plugin or hook changes.
 - On SSH, Linux, WSL, or NVM-based machines, verify `codex`, `node`, and `npx` are available in the shell that runs validation. Source `~/.nvm/nvm.sh` or use absolute paths when needed.
+- If `rg` is unavailable, use `grep` for the same targeted checks or report `ripgrep=missing`; do not fail the whole validation only because `rg` is absent.
 
 For claude-mem specifically:
 
