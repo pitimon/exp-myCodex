@@ -5,9 +5,10 @@ verified_at: "2026-06-08"
 plugins:
   claude-mem:
     selector: claude-mem@claude-mem-local
-    version: "13.4.0"
+    version: "13.4.1"
     notes:
-      - Codex overlay available under overlays/claude-mem/13.4.0/
+      - Codex overlay available under overlays/claude-mem/13.4.1/
+      - Version 13.4.1 overlay fixes the standup skill description length and startup hook output shape.
       - Run post-install verification before calling healthy.
 
   8-habit-ai-dev:

@@ -102,7 +102,9 @@ substantive work cannot be stored.
 ~/.claude-mem/backups/
 ~/.codex/config.toml
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.0/
+~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.1/
 overlays/claude-mem/13.4.0/
+overlays/claude-mem/13.4.1/
 ```
 
 ## Startup Behavior
@@ -352,10 +354,11 @@ test -n "$PLUGIN" && test -d "$PLUGIN"
 jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 ```
 
-Expected local version for this runbook:
+Expected local versions for this runbook:
 
 ```text
 13.4.0
+13.4.1
 ```
 
 4. Verify the worker and MCP path with the `Runtime Verification` section.
@@ -439,17 +442,20 @@ test -f "$PLUGIN/scripts/codex-hook-drain.cjs"
 test -f "$PLUGIN/scripts/codex-hook-mode.cjs"
 ```
 
-If those files are missing and this repo has the overlay assets, apply the
-reviewed overlay only after the version guard passes:
+If those files are missing and this repo has matching overlay assets, apply the
+reviewed overlay only after the version guard passes.
+
+Use the overlay that matches the active plugin version:
 
 ```bash
-PATCH_ROOT=overlays/claude-mem/13.4.0
+VERSION=$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")
+PATCH_ROOT="overlays/claude-mem/${VERSION}"
 test -d "$PATCH_ROOT"
-test "$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")" = "13.4.0"
 
 for f in \
   hooks/codex-hooks.json \
   hooks/hooks.json \
+  skills/standup/SKILL.md \
   scripts/worker-service.cjs \
   scripts/transcript-watcher.cjs \
   scripts/codex-hook-spool.cjs \
@@ -468,11 +474,21 @@ done
 rsync -a "$PATCH_ROOT"/ "$PLUGIN"/
 ```
 
-After applying the overlay, make the `PostToolUse` hook target the current
-machine's active plugin root:
+For `13.4.1`, also patch the marketplace snapshot if it is present, because a
+future reinstall may refresh the active cache from that snapshot:
 
 ```bash
-node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced
+MARKET="$HOME/.codex/.tmp/marketplaces/claude-mem-local/plugin"
+test -d "$MARKET" && rsync -a "$PATCH_ROOT"/ "$MARKET"/
+```
+
+For `13.4.0`, after applying the overlay, make the `PostToolUse` hook target
+the current machine's active plugin root:
+
+```bash
+if [ "$VERSION" = "13.4.0" ]; then
+  node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced
+fi
 ```
 
 7. Restart the worker and Codex.
@@ -728,7 +744,7 @@ Marketplace snapshot:
 The installed cache is the runtime verification target. The marketplace
 snapshot alone is not sufficient evidence.
 
-Current 2026-06-08 active checksums:
+Current 2026-06-08 active `13.4.0` checksums:
 
 ```text
 scripts/worker-service.cjs      08406909758972eeaf8b95883e41f540b997d4e90d6badd76407f62f0b87ab1c
@@ -738,6 +754,14 @@ hooks/hooks.json                a0607dde6f87080b740fc394f1f08379ec453ea95a801d30
 scripts/transcript-watcher.cjs  a25cc63bfff5ad520b3eba00dac3150d0804a7b13b29c6c71c1c753f529c2b33
 .mcp.json                       bcbfabb39432fed47e9970f607e761f2c30b74eef3197dbaa0216feb5d24f304
 package.json                    deba50feb85520007901bee93aa7625e329e6798d52937285fd252c7f5facfb1
+```
+
+Current 2026-06-08 active `13.4.1` overlay checksums:
+
+```text
+hooks/codex-hooks.json          560b215314b62ded51d592b617677cb9d1437d161f39e7db9c36ffb67fc3bf6c
+hooks/hooks.json                2108155263a3defcd23d55d19f14161037d74ea898a2ca4e2699871d252874a8
+skills/standup/SKILL.md         3fb07d07acad20b6b6e5e8a8391ad90b8c08615749e4c268d281b9cc672e14a3
 ```
 
 Syntax and hook checks:
@@ -863,6 +887,6 @@ real examples. Avoid broad skip rules that would drop useful incident evidence.
 ## Public Export Note
 
 This public export intentionally includes only the Codex + `claude-mem`
-handoff runbook and the reviewed `claude-mem` 13.4.0 Codex overlay assets.
-Optional private-workstation Obsidian runbooks and historical incident
+handoff runbook and the reviewed `claude-mem` 13.4.0 / 13.4.1 Codex overlay
+assets. Optional private-workstation Obsidian runbooks and historical incident
 handover notes are not included.

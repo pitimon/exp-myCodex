@@ -9,9 +9,9 @@ plugins:
     marketplace: claude-mem-local
     selector: claude-mem@claude-mem-local
     source: thedotmack/claude-mem
-    verified_version: "13.4.0"
+    verified_version: "13.4.1"
     runbook: docs/runbooks/plugins/claude-mem.md
-    overlay: overlays/claude-mem/13.4.0/
+    overlay: overlays/claude-mem/13.4.1/
     codex_install:
       - codex plugin marketplace add thedotmack/claude-mem
       - codex plugin add claude-mem@claude-mem-local
