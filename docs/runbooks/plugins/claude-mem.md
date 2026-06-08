@@ -68,6 +68,10 @@ OpenRouter rollback model retained: google/gemini-2.5-flash-lite
 CLAUDE_MEM_CODEX_TRANSCRIPT_INGESTION=false
 ```
 
+Other workstations may use port `37777` instead of `37701`. Always verify the
+actual worker port from `~/.claude-mem/worker.pid`, settings, health probes, or
+the live worker process before declaring the runtime unhealthy.
+
 Rollback snapshots currently exist under `~/.claude-mem/backups/`, including:
 
 ```text
@@ -228,7 +232,13 @@ Use this preflight before any Codex-side install or overlay:
 test -d ~/.claude-mem && printf 'claude_mem_home=present\n' || printf 'claude_mem_home=missing\n'
 test -f ~/.claude-mem/settings.json && printf 'settings=present\n' || printf 'settings=missing\n'
 test -f ~/.claude-mem/worker.pid && jq '{pid,port,startedAt}' ~/.claude-mem/worker.pid || true
-curl -fsS http://127.0.0.1:37701/api/health | jq . || true
+
+for port in 37701 37777; do
+  printf 'checking_port=%s\n' "$port"
+  curl -fsS "http://127.0.0.1:${port}/api/health" | jq . || true
+done
+
+ps -axo pid,command | grep -E 'claude-mem|worker-service' | grep -v grep || true
 ```
 
 Check secret presence only, not secret values:
@@ -471,8 +481,14 @@ fi
 4. Verify worker health.
 
 ```bash
-curl -sS http://127.0.0.1:37701/api/health | jq .
 jq '{pid,port,startedAt}' ~/.claude-mem/worker.pid
+
+for port in 37701 37777; do
+  printf 'checking_port=%s\n' "$port"
+  curl -fsS "http://127.0.0.1:${port}/api/health" | jq . || true
+done
+
+ps -axo pid,command | grep -E 'claude-mem|worker-service' | grep -v grep || true
 ```
 
 5. Verify settings without secrets.
@@ -515,8 +531,14 @@ Prefer these checks over startup warnings.
 Health:
 
 ```bash
-curl -sS http://127.0.0.1:37701/api/health | jq .
 jq '{pid,port,startedAt}' ~/.claude-mem/worker.pid
+
+for port in 37701 37777; do
+  printf 'checking_port=%s\n' "$port"
+  curl -fsS "http://127.0.0.1:${port}/api/health" | jq . || true
+done
+
+ps -axo pid,command | grep -E 'claude-mem|worker-service' | grep -v grep || true
 ```
 
 Expected:
@@ -526,6 +548,11 @@ Expected:
   "status": "ok"
 }
 ```
+
+At least one candidate port, the port recorded in `worker.pid`, or a
+discovered worker process should explain where the worker is running. If both
+candidate ports fail but a worker process exists, inspect its environment,
+settings, and logs before reinstalling.
 
 Settings without secrets:
 
