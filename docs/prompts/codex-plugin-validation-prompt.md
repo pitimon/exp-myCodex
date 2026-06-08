@@ -33,6 +33,7 @@ Important constraints:
 For claude-mem specifically:
 
 - Start with docs/runbooks/plugins/claude-mem.md.
+- If the goal is to test the runbook itself, also run docs/runbooks/claude-mem-scenario-tests.md and report which scenarios passed, failed, or were skipped.
 - Prefer installing and validating claude-mem with Claude Code first, then use the Codex plugin to connect Codex to the already-working worker.
 - Before any Codex-side install or overlay, run the runbook's Recommended Claude Code First Preflight and report whether the claude-mem worker is already healthy.
 - Check both common claude-mem health ports, 37701 and 37777, but do not accept a healthy HTTP response by itself. Match the health `workerPath`, `~/.claude-mem/worker.pid`, settings port, process owner, and version to the current user.

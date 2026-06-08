@@ -27,6 +27,12 @@ docs/runbooks/plugins/claude-governance.md
 docs/runbooks/plugins/claude-mem.md
 ```
 
+For validating the `claude-mem` runbook against a real workstation, use:
+
+```text
+docs/runbooks/claude-mem-scenario-tests.md
+```
+
 For non-plugin tooling, read:
 
 ```text
