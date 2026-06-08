@@ -734,7 +734,7 @@ Current 2026-06-08 active checksums:
 scripts/worker-service.cjs      08406909758972eeaf8b95883e41f540b997d4e90d6badd76407f62f0b87ab1c
 modes/code.json                 77b1755e13bf52e1f4382e6650df6fe7df8f4d14aaac6abbd31db2ef4d28354b
 hooks/codex-hooks.json          3149ede32a0c26dd31fc1e4bed14652fed65dc27f9960d817040cbb2e1028123
-hooks/hooks.json                d9df488bc98c51ea3011d0a4d82bf10aee19e9e02229b722c25a902366584d37
+hooks/hooks.json                0971e56872f37c91d7d27e9a021a418f7b8c2848dbc491abca74b1fc990abc0a
 scripts/transcript-watcher.cjs  a25cc63bfff5ad520b3eba00dac3150d0804a7b13b29c6c71c1c753f529c2b33
 .mcp.json                       bcbfabb39432fed47e9970f607e761f2c30b74eef3197dbaa0216feb5d24f304
 package.json                    deba50feb85520007901bee93aa7625e329e6798d52937285fd252c7f5facfb1
