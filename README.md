@@ -1,107 +1,188 @@
 # exp-myCodex
 
-Public Codex setup notes, runbooks, and manifests from a real workstation.
+Public, field-tested Codex setup notes for people who want a stronger starting
+point than a default install.
 
-`exp-myCodex` is a public-safe knowledge base for people who want to prepare
-Codex beyond a default install: memory integration, plugin hygiene, runtime
-verification, workflow discipline, and token-aware tooling.
-
-The material here comes from practical setup and maintenance work. It is
-curated for sharing, so private infrastructure details, secrets, raw
+This repository shares the practical Codex preparation work behind one real
+workstation: plugin installation, memory integration, runtime verification,
+version-drift handling, token visibility, and command-output discipline. It is
+curated for public reuse, so private infrastructure details, secrets, raw
 transcripts, and machine-specific incident records are intentionally excluded.
+
+## Purpose
+
+`exp-myCodex` is a public handoff repository. It is meant to help friends,
+teams, and other Codex users reproduce the useful parts of this setup without
+needing access to a private operations repo.
+
+The repo focuses on:
+
+- installing and validating Codex plugins from public sources
+- connecting Codex to an already-working `claude-mem` worker
+- detecting active plugin cache, MCP, worker, and service state before calling
+  a setup healthy
+- handling fast-moving plugin versions with exact-version overlays and
+  compatibility checks
+- adding token and output-discipline tools around Codex
+- keeping all public documentation safe to share
+
+This is not a one-command installer. Treat it as a tested runbook collection,
+manifest set, and validation prompt that a target workstation can follow.
 
 ## Who This Is For
 
-- Codex users who want a repeatable setup checklist.
-- Operators maintaining Codex plugins across machines.
+- Codex users preparing a repeatable personal workstation setup.
+- Operators maintaining Codex plugins across multiple machines.
 - Teams evaluating memory, governance, and workflow plugins for AI-assisted
   engineering.
-- Friends and community members who want to reuse the lessons without reading a
-  private operations repo.
+- Maintainers who want public, reviewable examples of Codex plugin handoff
+  documentation.
 
 ## Quick Start
 
-Start with the documentation index:
+On a target workstation, start with the docs index:
 
 ```text
 docs/README.md
 ```
 
-Then use the reusable validation prompt on the target workstation:
+Then run the reusable validation prompt in Codex:
 
 ```text
 docs/prompts/codex-plugin-validation-prompt.md
 ```
 
-The prompt tells the target agent to read the public repo, follow the relevant
-runbooks, verify the active runtime, and avoid printing secrets.
+The prompt tells the target agent to read this repo, install or validate the
+documented tools, avoid printing secrets, and report real runtime evidence
+instead of assuming repo state equals active state.
+
+For `claude-mem`, read this first:
+
+```text
+docs/runbooks/plugins/claude-mem.md
+```
+
+If the workstation is intentionally testing whether the `claude-mem` runbook is
+complete, also run:
+
+```text
+docs/runbooks/claude-mem-scenario-tests.md
+```
 
 ## How The Pieces Fit Together
 
 ```text
-                         Public mirrors
-             +------------------------------------+
-             | GitHub: pitimon/exp-myCodex        |
-             | Gitea : pitimon/exp-myCodex        |
-             +------------------+-----------------+
-                                |
-                                v
-                 +------------------------------+
-                 | docs/ + manifests/ + prompts |
-                 | public-safe setup knowledge  |
-                 +---------------+--------------+
-                                 |
-                 target agent reads runbooks
-                                 |
-                                 v
-+------------------------------------------------------------------+
-|                              Codex                               |
-|                                                                  |
-|  +----------------------+   +-------------------------------+    |
-|  | Plugin management    |   | Runtime verification          |    |
-|  | codex plugin ...     |   | active cache, MCP, services   |    |
-|  +----------+-----------+   +---------------+---------------+    |
-|             |                               |                    |
-|             v                               v                    |
-|  +----------------------+      +-----------------------------+   |
-|  | 8-Habit AI Dev       |      | claude-mem                  |   |
-|  | workflow discipline  |      | memory hooks + mcp-search   |   |
-|  +----------------------+      +---------------+-------------+   |
-|                                                |                 |
-|  +----------------------+                      v                 |
-|  | Claude Governance    |      +-----------------------------+   |
-|  | ADR/governance       |      | claude-mem worker + SQLite  |   |
-|  +----------------------+      | historical agent memory      |   |
-|                                +-----------------------------+   |
-|                                                                  |
-|  +----------------------+      +-----------------------------+   |
-|  | RTK                  |      | TokenTracker                |   |
-|  | compact command I/O  |      | token/cost visibility       |   |
-|  +----------------------+      +-----------------------------+   |
-+------------------------------------------------------------------+
-                 ^
-                 |
-     overlays/ when a plugin needs a reviewed local patch
+                           Public mirrors
+               +------------------------------------+
+               | GitHub: pitimon/exp-myCodex        |
+               | Gitea : pitimon/exp-myCodex        |
+               +------------------+-----------------+
+                                  |
+                                  v
+                 +----------------------------------+
+                 | docs / manifests / prompts      |
+                 | public-safe Codex handoff layer |
+                 +----------------+-----------------+
+                                  |
+                         target Codex reads
+                                  |
+                                  v
++--------------------------------------------------------------------+
+|                                Codex                               |
+|                                                                    |
+|  +-----------------------+      +-------------------------------+  |
+|  | Plugin management     |      | Runtime verification          |  |
+|  | codex plugin ...      |      | cache, MCP, hooks, services   |  |
+|  +-----------+-----------+      +---------------+---------------+  |
+|              |                                  |                  |
+|              v                                  v                  |
+|  +-----------------------+      +-------------------------------+  |
+|  | 8-Habit AI Dev        |      | claude-mem                    |  |
+|  | workflow discipline   |      | hooks, MCP search, worker     |  |
+|  +-----------------------+      +---------------+---------------+  |
+|                                                   |                |
+|  +-----------------------+                       v                |
+|  | Claude Governance     |      +-------------------------------+  |
+|  | ADRs and governance   |      | SQLite store / queue / search |  |
+|  +-----------------------+      | historical agent memory       |  |
+|                                 +-------------------------------+  |
+|                                                                    |
+|  +-----------------------+      +-------------------------------+  |
+|  | RTK                   |      | TokenTracker                  |  |
+|  | compact command I/O   |      | token and cost visibility     |  |
+|  +-----------------------+      +-------------------------------+  |
++--------------------------------------------------------------------+
+                                  ^
+                                  |
+              exact-version overlays and compatibility helpers
 ```
 
-In short: this repo is the public handoff layer. Codex uses the runbooks and
-manifests to install plugins, verify active runtime state, apply reviewed
-overlays when needed, and add adjacent tools for token visibility and compact
-command output.
+## Included Workflows
 
-## What Is Included
-
-| Area | Purpose | Start Here |
+| Workflow | What It Covers | Start Here |
 | --- | --- | --- |
-| Codex plugin setup | Install, update, and validate Codex plugins | `docs/runbooks/plugins/` |
-| `claude-mem` memory | Codex memory hooks, worker checks, and overlay guidance | `docs/runbooks/plugins/claude-mem.md` |
-| 8-Habit AI Dev | Workflow discipline for AI-assisted engineering | `docs/runbooks/plugins/8-habit-ai-dev.md` |
-| Claude Governance | Governance and compliance-oriented skills | `docs/runbooks/plugins/claude-governance.md` |
-| TokenTracker | Token and cost visibility for AI coding tools | `docs/runbooks/tools/tokentracker.md` |
-| RTK | Token-optimized shell command proxy | `docs/runbooks/tools/rtk.md` |
-| Manifests | Machine-readable plugin, tool, mirror, and version inventory | `docs/manifests/` |
-| Runtime overlays | Reviewed local patch overlays when a plugin needs them | `overlays/` |
-| Compatibility helpers | Version-aware inspection, overlay apply, and verification scripts | `scripts/` |
+| Codex plugin setup | Plugin add, update, reinstall, and version checks | `docs/runbooks/plugins/` |
+| `claude-mem` memory | Claude Code-first preflight, Codex hooks, MCP search, worker health, ports `37701`/`37777`, incident mode | `docs/runbooks/plugins/claude-mem.md` |
+| `claude-mem` scenario testing | Read-only and state-changing checks for validating the runbook on a real machine | `docs/runbooks/claude-mem-scenario-tests.md` |
+| 8-Habit AI Dev | AI-assisted engineering workflow discipline | `docs/runbooks/plugins/8-habit-ai-dev.md` |
+| Claude Governance | Governance, ADR, and compliance-oriented skills | `docs/runbooks/plugins/claude-governance.md` |
+| TokenTracker | Token and cost visibility, foreground use, and background service setup | `docs/runbooks/tools/tokentracker.md` |
+| RTK | Token-optimized shell command output around Codex | `docs/runbooks/tools/rtk.md` |
+| Manifests | Public plugin/tool/mirror/version inventory | `docs/manifests/` |
+| Overlays | Reviewed local fixes for exact plugin versions | `overlays/` |
+| Compatibility helper | Inspect, apply, and verify `claude-mem` Codex compatibility state | `scripts/claude-mem-codex-compat.cjs` |
+
+## Runtime Verification Model
+
+The central lesson from the source workstation is simple: verify active runtime
+state before declaring anything healthy.
+
+For Codex plugins, check:
+
+- `codex plugin list`
+- `codex mcp list`
+- active cache path under `~/.codex/plugins/cache/...`
+- marketplace snapshot under `~/.codex/.tmp/marketplaces/...`
+- installed plugin version, not just the release or manifest version
+
+For `claude-mem`, check:
+
+- whether Claude Code already has a working `claude-mem` worker
+- `~/.claude-mem/worker.pid`
+- health on both common ports, `37701` and `37777`
+- health `workerPath`, process owner, and current user match
+- `mcp-search` availability
+- hook output shape, including unsupported `suppressOutput` regressions
+- recent context payload behavior with a Codex-shaped `SessionStart` payload
+
+For adjacent tools, check:
+
+- package/version output from the target machine
+- service manager state when installed as a background service
+- smoke tests from the runbook, not only package installation success
+
+## Version Drift And Overlays
+
+`claude-mem` changes quickly. A healthy worker version and active Codex plugin
+version can legitimately differ, especially on shared or test machines. This
+repo therefore treats every new active Codex plugin version as a runtime
+contract that must be checked before applying patches.
+
+Use the compatibility helper from the repo root:
+
+```bash
+node scripts/claude-mem-codex-compat.cjs inspect --json
+node scripts/claude-mem-codex-compat.cjs apply --json
+node scripts/claude-mem-codex-compat.cjs verify --json
+```
+
+Overlay policy:
+
+- apply only `overlays/claude-mem/<active-version>/`
+- never apply a patch directory from an older version to a newer cache
+- if no overlay exists, report `overlay=missing_for_version:<version>` and keep
+  the machine in discovery mode
+- update manifests only after public runtime verification
 
 ## Repository Map
 
@@ -117,26 +198,21 @@ docs/
     codex-plugin-validation-prompt.md
   runbooks/
     claude-mem-scenario-tests.md
+    codex-claude-mem-memory-runbook.md
     plugins/
+      8-habit-ai-dev.md
+      claude-governance.md
+      claude-mem.md
+      template.md
     tools/
+      rtk.md
+      tokentracker.md
 overlays/
   claude-mem/13.4.0/
   claude-mem/13.4.1/
 scripts/
   claude-mem-codex-compat.cjs
 ```
-
-## Operating Principles
-
-- Verify current runtime state before declaring a setup healthy.
-- Check active plugin versions, active cache paths, service health, and command
-  output instead of relying on repository state alone.
-- Keep instructions reproducible with exact package selectors, update commands,
-  verification checks, and rollback hints.
-- Keep shared docs public-safe: no secrets, private issue links, raw
-  transcripts, or customer-sensitive material.
-- Treat token usage as an operational concern. TokenTracker and RTK are included
-  because long Codex sessions need visibility and output discipline.
 
 ## Public Mirrors
 
@@ -153,6 +229,34 @@ Mirror metadata lives in:
 docs/manifests/public-mirrors.yaml
 ```
 
+After public documentation changes, keep both mirrors aligned.
+
+## Public-Safety Rules
+
+- Do not publish API keys, OAuth tokens, bearer tokens, private keys,
+  kubeconfigs, passwords, customer context, raw transcripts, or private issue
+  links.
+- When checking local settings, print only safe derived facts such as boolean
+  secret presence and value length.
+- Do not run broad secret scans against sensitive local config while memory
+  hooks are enabled; narrow the scan to candidate public artifacts.
+- Prefer public release URLs, package selectors, and reproducible commands over
+  private machine paths.
+- Keep Obsidian/private second-brain workflows out of this public repo unless a
+  future document is explicitly written as an optional public integration.
+
+## Maintenance Checklist
+
+When updating this repo:
+
+1. Verify current release/runtime state on a real machine.
+2. Update the relevant runbook.
+3. Update `docs/manifests/*.yaml` when recommended versions change.
+4. Add or adjust overlays only for exact plugin versions.
+5. Run markdown and whitespace checks.
+6. Scan changed public files for secrets or private paths.
+7. Push `main` to both public mirrors.
+
 ## Contributing
 
 Contributions are welcome when they improve public, reproducible Codex setup
@@ -164,12 +268,13 @@ Good contributions:
 - update version manifests after confirming public release state
 - improve cross-platform instructions
 - add troubleshooting notes backed by observed behavior
+- improve scenario tests for real target workstations
 
 Please avoid:
 
 - private URLs or issue links
 - secrets, tokens, credentials, kubeconfigs, or raw transcripts
-- machine-specific paths unless they are clearly examples
+- machine-specific paths unless they are clearly generic examples
 - unverified claims about active plugin/runtime behavior
 
 ## License
