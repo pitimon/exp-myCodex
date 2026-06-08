@@ -41,6 +41,7 @@ For claude-mem specifically:
 - If `CLAUDE_MEM_CHROMA_ENABLED=true`, verify `uvx` is installed and visible to the worker. Install `uv/uvx` or explicitly report Chroma as skipped/unhealthy before calling vector search healthy.
 - Verify `scripts/version-check.js` against the active Codex cache and check for `.install-version` there; do not assume the Claude Code cache marker applies to Codex.
 - If applying the local overlay, match the active claude-mem version to the overlay directory.
+- If no overlay exists for the active claude-mem version, do not apply an older overlay. Report `overlay=missing_for_version:<version>` and run the runbook's Version Drift Policy discovery checks.
 - For claude-mem 13.4.0, run `node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced` after applying the overlay.
 - For claude-mem 13.4.1, apply the minimal overlay to both the active cache and marketplace snapshot when present; it fixes `skills/standup/SKILL.md` description length and startup hook output shape.
 - For claude-mem 13.4.1, verify the Codex `PostToolUse` hook output does not contain top-level `suppressOutput`; the overlay includes `scripts/codex-hook-output-filter.js`.

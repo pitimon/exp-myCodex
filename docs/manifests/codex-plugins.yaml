@@ -12,6 +12,8 @@ plugins:
     verified_version: "13.4.1"
     runbook: docs/runbooks/plugins/claude-mem.md
     overlay: overlays/claude-mem/13.4.1/
+    overlay_policy: exact-version-only
+    update_behavior: fast-moving
     codex_install:
       - codex plugin marketplace add thedotmack/claude-mem
       - codex plugin add claude-mem@claude-mem-local

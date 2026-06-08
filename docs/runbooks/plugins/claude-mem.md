@@ -149,6 +149,76 @@ printf 'active_codex_plugin=%s\n' "$PLUGIN"
 jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 ```
 
+## Version Drift Policy
+
+`claude-mem` can publish frequent plugin updates. Treat every new active
+version as a new runtime contract until verified. The goal is not to pin users
+forever; it is to avoid silently applying stale hook patches to a changed
+bundle.
+
+Version handling rules:
+
+- Use the active Codex cache version, not the marketplace listing alone.
+- Apply an overlay only when `overlays/claude-mem/<version>/` exists and the
+  active cache reports the same version.
+- Do not apply a `13.4.0` overlay to `13.4.1`, or a `13.4.1` overlay to a newer
+  version such as `13.4.2`, unless the maintainer has reviewed that exact
+  bundle and updated this repo.
+- If the active version has no overlay, run read-only verification first and
+  report `overlay=missing_for_version:<version>`.
+- A missing overlay is not automatically unhealthy. It means the workstation is
+  in discovery mode until hook output, skills, MCP, and worker state pass the
+  checks below.
+
+Version drift discovery:
+
+```bash
+PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+VERSION=$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")
+PATCH_ROOT="overlays/claude-mem/${VERSION}"
+
+printf 'active_codex_plugin=%s\n' "$PLUGIN"
+printf 'active_version=%s\n' "$VERSION"
+if [ -d "$PATCH_ROOT" ]; then
+  printf 'overlay=%s\n' "$PATCH_ROOT"
+else
+  printf 'overlay=missing_for_version:%s\n' "$VERSION"
+fi
+
+find "$PLUGIN/skills" -name SKILL.md -maxdepth 2 -print 2>/dev/null |
+  while IFS= read -r skill; do
+    awk '
+      /^description:/ {
+        line=$0
+        sub(/^description:[[:space:]]*/, "", line)
+        print FILENAME ": description_chars=" length(line)
+      }
+    ' "$skill"
+  done
+```
+
+For a new version without an overlay, validate these before declaring healthy:
+
+```bash
+node "$PLUGIN/scripts/version-check.js"
+jq -e '.hooks.SessionStart and .hooks.UserPromptSubmit and .hooks.PostToolUse and .hooks.Stop' \
+  "$PLUGIN/hooks/codex-hooks.json" >/dev/null
+! grep -ERn 'suppressOutput:!0|suppressOutput:true|"suppressOutput":true' \
+  "$PLUGIN/hooks/codex-hooks.json" "$PLUGIN/hooks/hooks.json"
+```
+
+Then run:
+
+- direct `SessionStart` hook checks with real Codex-shaped payloads
+- direct `PostToolUse` hook check with a simulated tool payload
+- `codex mcp list`
+- `npx claude-mem status`
+- fresh warm-up prompt
+
+If the new version fails any of those checks, do not patch blindly. Create a new
+overlay directory for that exact version, update `docs/manifests/*.yaml`, add
+checksums, run remote validation, then commit and push the runbook update.
+
 ## Warm-Up-Only Session Prompt
 
 Use this when the only goal is to let configured startup context and hooks
@@ -398,6 +468,11 @@ known.
 Use this after a Codex update, a `claude-mem` marketplace update, or when a
 target workstation may have a stale marketplace snapshot.
 
+Before making changes, read `Version Drift Policy`. If a marketplace update
+installs a version that this repo does not yet have under
+`overlays/claude-mem/<version>/`, stop automatic overlay application and run
+the discovery checks first.
+
 1. Capture the current state without secrets.
 
 ```bash
@@ -477,7 +552,11 @@ Use the overlay that matches the active plugin version:
 ```bash
 VERSION=$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")
 PATCH_ROOT="overlays/claude-mem/${VERSION}"
-test -d "$PATCH_ROOT"
+if [ ! -d "$PATCH_ROOT" ]; then
+  printf 'overlay=missing_for_version:%s\n' "$VERSION"
+  printf 'stop: run Version Drift Policy discovery before patching this version\n'
+  exit 2
+fi
 
 for f in \
   hooks/codex-hooks.json \

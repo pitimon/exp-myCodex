@@ -9,6 +9,7 @@ plugins:
     notes:
       - Codex overlay available under overlays/claude-mem/13.4.1/
       - Version 13.4.1 overlay fixes the standup skill description length and startup hook output shape.
+      - claude-mem is fast-moving; apply overlays only when the active cache version exactly matches the overlay directory.
       - Run post-install verification before calling healthy.
 
   8-habit-ai-dev:
