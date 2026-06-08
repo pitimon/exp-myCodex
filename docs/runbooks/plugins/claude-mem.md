@@ -17,6 +17,13 @@ Use it for:
 - local plugin cache drift
 - incident mode when hooks slow or block Codex
 
+If the target workstation is intentionally testing this runbook, run the
+scenario checklist after reading this file:
+
+```text
+docs/runbooks/claude-mem-scenario-tests.md
+```
+
 This public export intentionally excludes the private Obsidian workflow. Treat
 Obsidian as a separate optional integration and do not require it for
 `claude-mem` health.

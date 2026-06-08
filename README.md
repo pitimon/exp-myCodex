@@ -116,6 +116,7 @@ docs/
   prompts/
     codex-plugin-validation-prompt.md
   runbooks/
+    claude-mem-scenario-tests.md
     plugins/
     tools/
 overlays/
