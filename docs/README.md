@@ -36,6 +36,7 @@ docs/runbooks/claude-mem-scenario-tests.md
 For non-plugin tooling, read:
 
 ```text
+docs/runbooks/tools/obsidian.md
 docs/runbooks/tools/rtk.md
 docs/runbooks/tools/tokentracker.md
 ```
@@ -62,6 +63,8 @@ docs/manifests/verified-versions.yaml
 - Prefer public release URLs and plugin selectors over private issue links.
 - Keep one runbook per plugin.
 - Keep one runbook per reusable CLI/tool.
+- Keep Obsidian notes curated and project-indexed; do not publish raw
+  transcript dumps as reusable memory.
 - Keep reusable prompts in `docs/prompts/`.
 - Keep runtime overlays in `overlays/<plugin>/<version>/`.
 - Keep executable compatibility helpers in `scripts/`.

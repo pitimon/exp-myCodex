@@ -64,6 +64,14 @@ For RTK specifically:
 - If Homebrew is unavailable, use the official `rtk-ai/rtk` installer with the manifest version, add `~/.local/bin` to `PATH`, and smoke test `rtk --version`, `rtk gain`, and `rtk proxy echo ok`.
 - Do not install the global shell hook with `rtk init -g` unless the user explicitly wants automatic shell integration.
 
+For Obsidian specifically:
+
+- Use docs/runbooks/tools/obsidian.md.
+- Treat Obsidian as an optional curated second-brain layer, not proof that claude-mem is healthy.
+- Keep raw captures under `Codex/Inbox/` and promote only durable summaries, decisions, lessons, and runbooks into `Claude-Mem/Projects/<project>/`.
+- Rebuild and verify the project `Index.md` after adding or updating a project note.
+- Do not store raw transcripts, secrets, customer-sensitive data, or private operational logs in Obsidian.
+
 Expected final response:
 Provide a concise validation report with:
 
@@ -75,6 +83,7 @@ Provide a concise validation report with:
 - claude-mem worker health, port ownership/path, and Chroma/uvx state, when relevant
 - TokenTracker package/version, service state, dashboard health, and doctor warnings, when relevant
 - RTK version, install path, and smoke-test result, when relevant
+- Obsidian vault access, project note path, index rebuild result, and curation boundary, when relevant
 - release URL or verified version used
 - validation commands run
 - any remaining risk or manual follow-up

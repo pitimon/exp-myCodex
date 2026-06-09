@@ -24,9 +24,13 @@ scenario checklist after reading this file:
 docs/runbooks/claude-mem-scenario-tests.md
 ```
 
-This public export intentionally excludes the private Obsidian workflow. Treat
-Obsidian as a separate optional integration and do not require it for
-`claude-mem` health.
+Obsidian is a separate optional second-brain layer. It can store curated
+human-readable project notes, but it is not required for `claude-mem` health.
+Use the Obsidian runbook when adding that layer:
+
+```text
+docs/runbooks/tools/obsidian.md
+```
 
 ## Safety
 
@@ -366,6 +370,8 @@ memories = true
 ```
 
 `obsidian-vault` in `codex mcp list` is not required for `claude-mem` health.
+If it is present, validate it separately with the Obsidian runbook instead of
+using it as proof that `claude-mem` is healthy.
 
 ## Recommended Claude Code First Preflight
 

@@ -4,6 +4,20 @@
 # useful around Codex but are not installed through `codex plugin`.
 
 tools:
+  - name: obsidian
+    display_name: Obsidian second-brain workflow
+    package_manager:
+      - manual app install
+      - filesystem MCP server
+    package: obsidian
+    verified_version: workflow-only
+    homepage: https://obsidian.md/
+    runbook: docs/runbooks/tools/obsidian.md
+    smoke_tests:
+      - test -d "<vault>/Claude-Mem/Projects/<project>"
+      - node ~/.codex/scripts/obsidian-project-index.cjs <project>
+      - rg -n "<note-title>|<note-slug>" "<vault>/Claude-Mem/Projects/<project>/Index.md"
+
   - name: rtk
     display_name: RTK - Rust Token Killer
     package_manager:

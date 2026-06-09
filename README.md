@@ -22,6 +22,7 @@ This repository is not a marketing demo, a private incident log, or a one-shot
 installer. It is a public-safe operating kit for Codex users who want:
 
 - memory through `claude-mem` and `mcp-search`
+- curated second-brain notes through Obsidian
 - workflow discipline through `8-habit-ai-dev`
 - governance and ADR support through `claude-governance`
 - token/cost visibility through TokenTracker
@@ -106,6 +107,7 @@ Every runbook pushes the operator toward observable evidence:
 | MCP | plugin manifest only | `codex mcp list`, tool availability, smoke queries |
 | `claude-mem` worker | one healthy HTTP response | port, `workerPath`, process owner, `worker.pid`, settings |
 | `claude-mem` hooks | startup banner text | hook JSON shape, `SessionStart` payload probe, warm-up behavior |
+| Obsidian notes | raw capture files, transcript dumps | curated project note, source IDs, index link, no secrets |
 | Overlays | newest directory by timestamp | exact active plugin version and matching overlay directory |
 | TokenTracker/RTK | package install success | version output, service status, smoke tests |
 
@@ -114,6 +116,7 @@ Every runbook pushes the operator toward observable evidence:
 | Area | Component | Why It Is Here | Runbook |
 | --- | --- | --- | --- |
 | Memory | `claude-mem` | Reuse historical agent memory through Codex hooks and `mcp-search` | `docs/runbooks/plugins/claude-mem.md` |
+| Second brain | Obsidian | Store curated human-readable project notes without replacing `claude-mem` | `docs/runbooks/tools/obsidian.md` |
 | Workflow | `8-habit-ai-dev` | Keep AI-assisted engineering structured and reviewable | `docs/runbooks/plugins/8-habit-ai-dev.md` |
 | Governance | `claude-governance` | Add ADR, compliance, and engineering governance support | `docs/runbooks/plugins/claude-governance.md` |
 | Visibility | TokenTracker | Track token/cost usage and run a local dashboard/service | `docs/runbooks/tools/tokentracker.md` |
@@ -140,6 +143,26 @@ When `claude-mem` releases a new version, this repo intentionally treats that as
 a new runtime contract. Do not apply an old overlay to a new cache just because
 the file names look familiar.
 
+## The Obsidian Pattern
+
+Obsidian is useful here as a curated, human-readable second brain. It should not
+replace `claude-mem` historical observations, and it should not receive raw
+transcripts by default.
+
+The pattern from the source workstation is:
+
+- use `claude-mem` and `mcp-search` for historical agent memory and evidence
+- stage raw local captures under `Codex/Inbox/` when a capture hook exists
+- promote only durable summaries, decisions, runbooks, and lessons into
+  `Claude-Mem/Projects/<project>/`
+- keep each project note concise, dated, source-backed, and linked from an
+  `Index.md`
+- never store secrets, tokens, private keys, customer-sensitive data, or raw
+  operational logs in Obsidian
+
+Use `docs/runbooks/tools/obsidian.md` when adding this layer to a new machine or
+project.
+
 ## Repository Structure
 
 ```text
@@ -161,6 +184,7 @@ docs/
       claude-mem.md
       template.md
     tools/
+      obsidian.md
       rtk.md
       tokentracker.md
 overlays/

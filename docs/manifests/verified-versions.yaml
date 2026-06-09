@@ -28,6 +28,15 @@ plugins:
       - v3.4.1 release is public and fixes Linux Claude Code install compatibility.
 
 tools:
+  obsidian:
+    package: obsidian
+    version: workflow-only
+    homepage: https://obsidian.md/
+    notes:
+      - Obsidian is an optional curated second-brain layer, not a requirement for claude-mem health.
+      - The verified workflow separates raw inbox captures from curated project notes.
+      - Project notes should be date-stamped, source-backed, linked from Index.md, and free of secrets or raw transcript dumps.
+
   rtk:
     package: rtk
     package_manager:
