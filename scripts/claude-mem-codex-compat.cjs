@@ -9,7 +9,9 @@ const repoRoot = path.resolve(__dirname, "..");
 const home = os.homedir();
 const cacheRoot = path.join(home, ".codex", "plugins", "cache", "claude-mem-local", "claude-mem");
 const marketplaceRoot = path.join(home, ".codex", ".tmp", "marketplaces", "claude-mem-local", "plugin");
-const requiredHookEvents = ["SessionStart", "UserPromptSubmit", "PostToolUse", "Stop"];
+const claudeCacheRoot = path.join(home, ".claude", "plugins", "cache", "thedotmack", "claude-mem");
+const claudeMarketplaceRoot = path.join(home, ".claude", "plugins", "marketplaces", "thedotmack", "plugin");
+const requiredHookEvents = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
 const suppressPattern = /suppressOutput:!0|suppressOutput:true|"suppressOutput"\s*:\s*true/;
 
 function usage(exitCode = 2) {
@@ -39,6 +41,24 @@ function findActivePlugin() {
     throw new Error(`active claude-mem Codex cache not found under ${cacheRoot}`);
   }
   return plugin;
+}
+
+function readPluginVersion(plugin) {
+  return readJson(path.join(plugin, ".codex-plugin", "plugin.json")).version;
+}
+
+function findVersionedClaudeCache(version) {
+  const candidate = path.join(claudeCacheRoot, version);
+  return fs.existsSync(candidate) ? candidate : null;
+}
+
+function collectTargetRoots(activePlugin, version) {
+  return [
+    { kind: "codex-cache", path: activePlugin },
+    { kind: "codex-marketplace", path: marketplaceRoot },
+    { kind: "claude-cache", path: findVersionedClaudeCache(version) },
+    { kind: "claude-marketplace", path: claudeMarketplaceRoot },
+  ].filter((target) => target.path && fs.existsSync(target.path));
 }
 
 function walk(dir, prefix = "") {
@@ -93,11 +113,11 @@ function parseSkillDescriptions(plugin) {
 
 function inspect() {
   const plugin = findActivePlugin();
-  const manifest = readJson(path.join(plugin, ".codex-plugin", "plugin.json"));
-  const version = manifest.version;
+  const version = readPluginVersion(plugin);
   const overlay = path.join(repoRoot, "overlays", "claude-mem", version);
   const hookFiles = ["hooks/codex-hooks.json", "hooks/hooks.json"];
   const hookState = {};
+  const targetRoots = collectTargetRoots(plugin, version);
 
   for (const rel of hookFiles) {
     const file = path.join(plugin, rel);
@@ -127,6 +147,7 @@ function inspect() {
     overlayExists: fs.existsSync(overlay),
     marketplaceSnapshot: marketplaceRoot,
     marketplaceSnapshotExists: fs.existsSync(marketplaceRoot),
+    targetRoots,
     installMarkerExists: fs.existsSync(installMarker),
     hookState,
     filterExists: fs.existsSync(filter),
@@ -153,9 +174,9 @@ function applyOverlay() {
 
   const files = walk(state.overlay);
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-");
-  for (const target of [state.activePlugin, state.marketplaceSnapshotExists ? state.marketplaceSnapshot : null].filter(Boolean)) {
-    for (const rel of files) backupExisting(target, rel, stamp);
-    fs.cpSync(state.overlay, target, { recursive: true });
+  for (const target of state.targetRoots) {
+    for (const rel of files) backupExisting(target.path, rel, stamp);
+    fs.cpSync(state.overlay, target.path, { recursive: true });
   }
   return { ...state, appliedFiles: files };
 }
@@ -164,11 +185,23 @@ function verify() {
   const state = inspect();
   const errors = [];
   if (!state.installMarkerExists) errors.push("missing .install-version in active Codex cache");
-  for (const [file, hook] of Object.entries(state.hookState)) {
-    if (!hook.exists) errors.push(`${file} missing`);
-    else {
-      if (!hook.hasRequiredEvents) errors.push(`${file} missing required hook events`);
-      if (hook.hasUnsupportedSuppressOutput) errors.push(`${file} contains unsupported suppressOutput`);
+  for (const target of state.targetRoots) {
+    for (const rel of ["hooks/codex-hooks.json", "hooks/hooks.json"]) {
+      const file = path.join(target.path, rel);
+      if (!fs.existsSync(file)) {
+        errors.push(`${target.kind}:${rel} missing`);
+        continue;
+      }
+      const text = fs.readFileSync(file, "utf8");
+      const parsed = readJson(file);
+      const events = Object.keys(parsed.hooks || {});
+      if (rel === "hooks/codex-hooks.json" && !requiredHookEvents.every((event) => Boolean(parsed.hooks?.[event]))) {
+        errors.push(`${target.kind}:${rel} missing required hook events`);
+      }
+      if (suppressPattern.test(text)) errors.push(`${target.kind}:${rel} contains unsupported suppressOutput`);
+      if (rel === "hooks/codex-hooks.json" && !events.includes("PreToolUse")) {
+        errors.push(`${target.kind}:${rel} missing PreToolUse`);
+      }
     }
   }
   for (const issue of state.skillDescriptionIssues) {

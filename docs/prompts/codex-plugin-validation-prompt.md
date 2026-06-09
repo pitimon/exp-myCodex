@@ -45,8 +45,9 @@ For claude-mem specifically:
 - If applying the local overlay, match the active claude-mem version to the overlay directory.
 - If no overlay exists for the active claude-mem version, do not apply an older overlay. Report `overlay=missing_for_version:<version>` and run the runbook's Version Drift Policy discovery checks.
 - For claude-mem 13.4.0, run `node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced` after applying the overlay.
-- For claude-mem 13.4.1, apply the minimal overlay to both the active cache and marketplace snapshot when present; it fixes `skills/standup/SKILL.md` description length and startup hook output shape.
-- For claude-mem 13.4.1, verify the Codex `PostToolUse` hook output does not contain top-level `suppressOutput`; the overlay includes `scripts/codex-hook-output-filter.js`.
+- For claude-mem 13.4.2, keep the Codex marketplace pinned to `v13.4.2` unless a newer reviewed overlay exists.
+- For claude-mem 13.4.2, apply the minimal overlay to all live-resolvable roots when present: Codex cache, Codex marketplace snapshot, Claude cache, and Claude marketplace.
+- For claude-mem 13.4.2, verify the Codex `SessionStart`, `PreToolUse`, and `PostToolUse` hook outputs do not contain top-level `suppressOutput`; the overlay includes `scripts/codex-hook-output-filter.js`.
 - To validate recent-context injection, run the runbook's Codex-shaped `SessionStart` payload probe. Do not use `{}` as the probe payload.
 - Run the Post-Install And Post-Update Verification section before calling healthy.
 - If `sqlite3` is missing, report that exact skip and use worker health, logs, MCP search, and observation-write evidence instead of pretending SQL verification passed.

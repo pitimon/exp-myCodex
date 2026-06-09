@@ -1,16 +1,17 @@
 # Versions last captured from the source workstation runbook set.
 # Re-check on the target workstation after install/update.
 
-verified_at: "2026-06-08"
+verified_at: "2026-06-10"
 plugins:
   claude-mem:
     selector: claude-mem@claude-mem-local
-    version: "13.4.1"
+    version: "13.4.2"
+    ref: v13.4.2
     notes:
-      - Codex overlay available under overlays/claude-mem/13.4.1/
-      - Version 13.4.1 overlay fixes the standup skill description length and startup hook output shape.
-      - claude-mem is fast-moving; apply overlays only when the active cache version exactly matches the overlay directory.
-      - Run post-install verification before calling healthy.
+      - Codex overlay available under overlays/claude-mem/13.4.2/
+      - Version 13.4.2 overlay fixes the standup skill description length, PreToolUse/PostToolUse suppressOutput rejection, and empty SessionStart output.
+      - claude-mem is pinned to v13.4.2 on the source workstation; apply overlays only when the active cache version exactly matches the overlay directory.
+      - Run post-install verification and a fresh warm-up smoke before calling healthy.
 
   8-habit-ai-dev:
     selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev

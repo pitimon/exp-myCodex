@@ -143,7 +143,7 @@ The runbook checks:
 - foreign worker detection on shared hosts
 - `mcp-search` availability
 - unsupported `suppressOutput` hook regressions
-- exact-version overlay handling for `13.4.0` and `13.4.1`
+- exact-version overlay handling for `13.4.0`, `13.4.1`, and `13.4.2`
 - scenario tests for read-only and state-changing validation
 
 When `claude-mem` releases a new version, this repo intentionally treats that as
@@ -198,6 +198,7 @@ overlays/
   claude-mem/
     13.4.0/
     13.4.1/
+    13.4.2/
 scripts/
   claude-mem-codex-compat.cjs
 ```

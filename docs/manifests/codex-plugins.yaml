@@ -9,18 +9,21 @@ plugins:
     marketplace: claude-mem-local
     selector: claude-mem@claude-mem-local
     source: thedotmack/claude-mem
-    verified_version: "13.4.1"
+    verified_version: "13.4.2"
+    ref: v13.4.2
     runbook: docs/runbooks/plugins/claude-mem.md
-    overlay: overlays/claude-mem/13.4.1/
+    overlay: overlays/claude-mem/13.4.2/
     overlay_policy: exact-version-only
-    update_behavior: fast-moving
+    update_behavior: pinned-local-overlay
     codex_install:
-      - codex plugin marketplace add thedotmack/claude-mem
+      - codex plugin marketplace add thedotmack/claude-mem --ref v13.4.2
       - codex plugin add claude-mem@claude-mem-local
     codex_update:
       - codex plugin marketplace upgrade claude-mem-local
       - codex plugin remove claude-mem@claude-mem-local || true
       - codex plugin add claude-mem@claude-mem-local
+      - node scripts/claude-mem-codex-compat.cjs apply --json
+      - node scripts/claude-mem-codex-compat.cjs verify --json
 
   - name: 8-habit-ai-dev
     display_name: 8-Habit AI Dev

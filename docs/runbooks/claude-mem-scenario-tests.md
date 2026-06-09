@@ -75,8 +75,8 @@ Expected:
 - `activePlugin` points under `~/.codex/plugins/cache/...`.
 - `overlayExists` is true when the active version has a reviewed overlay.
 - `installMarkerExists` is true.
-- hook files include `SessionStart`, `UserPromptSubmit`, `PostToolUse`, and
-  `Stop`.
+- hook files include `SessionStart`, `UserPromptSubmit`, `PreToolUse`,
+  `PostToolUse`, and `Stop`.
 - `hasUnsupportedSuppressOutput` is false.
 - `skillDescriptionIssues` is empty.
 - `verify` returns `ok=true`.
@@ -203,8 +203,8 @@ node scripts/claude-mem-codex-compat.cjs verify --json
 Expected:
 
 - Existing target files are backed up with `.bak-compat-<timestamp>`.
-- The overlay is applied to the active cache and to the marketplace snapshot
-  when the snapshot exists.
+- The overlay is applied to the active Codex cache, Codex marketplace snapshot,
+  Claude cache, and Claude marketplace when those roots exist.
 - `verify` returns `ok=true`.
 - Codex is restarted before evaluating startup behavior.
 
@@ -218,6 +218,7 @@ codex plugin marketplace upgrade claude-mem-local
 codex plugin remove claude-mem@claude-mem-local
 codex plugin add claude-mem@claude-mem-local
 node scripts/claude-mem-codex-compat.cjs inspect --json
+node scripts/claude-mem-codex-compat.cjs apply --json
 node scripts/claude-mem-codex-compat.cjs verify --json
 ```
 
