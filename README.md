@@ -70,6 +70,7 @@ For a human reading the repo, use this path:
 |  marketplace upgrade                codex mcp list                 Governance  |
 |  remove/add fallback                active cache path              RTK         |
 |                                     worker health                  TokenTracker|
+|                                     project index                  Obsidian    |
 |                                     service status                             |
 |                                                                                |
 |        +------------------+        +------------------+        +-------------+ |
@@ -81,6 +82,12 @@ For a human reading the repo, use this path:
 |                              +----------------------------+                    |
 |                              | worker / SQLite / mcp-search|                   |
 |                              | historical agent memory     |                   |
+|                              +-------------+--------------+                    |
+|                                            |                                   |
+|                                            v                                   |
+|                              +----------------------------+                    |
+|                              | Obsidian project notes      |                   |
+|                              | curated second brain        |                   |
 |                              +----------------------------+                    |
 |                                                                                |
 |        +------------------+        +------------------+        +-------------+ |
