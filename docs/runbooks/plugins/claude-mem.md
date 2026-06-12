@@ -146,8 +146,8 @@ worker status, and hook stdout shape before treating `CAPTURE_BROKEN` as the
 root cause.
 
 For `claude-mem`, Codex and Claude Code can load different plugin trees. A
-healthy Claude Code runtime does not prove that the active Codex cache has the
-same install marker or hook files.
+healthy Claude Code runtime does not prove that the active Codex plugin path
+has the same install marker or hook files.
 
 Common roots:
 
@@ -156,12 +156,13 @@ Claude Code cache: ~/.claude/plugins/cache/thedotmack/claude-mem/<version>/
 Claude marketplace: ~/.claude/plugins/marketplaces/thedotmack/plugin/
 Codex cache: ~/.codex/plugins/cache/claude-mem-local/claude-mem/<version>/
 Codex marketplace snapshot: ~/.codex/.tmp/marketplaces/claude-mem-local/plugin/
+Codex marketplace staging: ~/.codex/.tmp/marketplaces/.staging/*/plugin/
 ```
 
-Always identify the active Codex cache before debugging Codex startup:
+Always identify the active Codex plugin path before debugging Codex startup:
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 printf 'active_codex_plugin=%s\n' "$PLUGIN"
 jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 ```
@@ -192,22 +193,25 @@ node scripts/claude-mem-codex-compat.cjs verify --json
 
 Exit behavior:
 
-- `inspect` is read-only and reports active cache, version, overlay presence,
-  hook state, install marker, and skill description issues.
+- `inspect` is read-only and reports the active `codex plugin list` path,
+  version, overlay presence, hook state, install marker, and skill description
+  issues.
 - `apply` backs up matching files, applies only the overlay whose directory
-  exactly matches the active cache version, and exits `2` if no overlay exists.
+  exactly matches the active plugin version, and exits `2` if no overlay exists.
 - `verify` exits non-zero if required hook events are missing, hook files still
-  contain top-level `suppressOutput`, `.install-version` is missing, or any
-  skill description exceeds Codex limits.
-- The 13.4.2 helper applies overlays to Codex cache, Codex marketplace snapshot,
-  Claude cache, and Claude marketplace roots when they exist, because Codex hook
-  resolution can fall back to Claude-side plugin trees.
+  contain top-level `suppressOutput`, `.install-version` is missing, exact hook
+  stdout smoke checks fail, or any skill description exceeds Codex limits.
+- The 13.4.2 helper applies overlays to the active `codex plugin list` path,
+  Codex cache, Codex staging roots, Claude cache, and Claude marketplace roots
+  when they exist, because Codex hook resolution can fall back across those
+  plugin trees.
 
 Version handling rules:
 
-- Use the active Codex cache version, not the marketplace listing alone.
+- Use the active `codex plugin list` path first, not the cache or marketplace
+  listing alone.
 - Apply an overlay only when `overlays/claude-mem/<version>/` exists and the
-  active cache reports the same version.
+  active plugin reports the same version.
 - Do not apply a `13.4.0` overlay to `13.4.1`, or a `13.4.1` overlay to a newer
   version such as `13.4.2`, unless the maintainer has reviewed that exact
   bundle and updated this repo. Use `overlays/claude-mem/13.4.2/` only with
@@ -227,7 +231,7 @@ node scripts/claude-mem-codex-compat.cjs inspect --json
 Manual fallback:
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 VERSION=$(jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json")
 PATCH_ROOT="overlays/claude-mem/${VERSION}"
 
@@ -498,10 +502,10 @@ claude-mem@claude-mem-local installed, enabled
 mcp-search                   enabled
 ```
 
-3. Find the active installed cache path.
+3. Find the active Codex plugin path.
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 printf '%s\n' "$PLUGIN"
 test -n "$PLUGIN" && test -d "$PLUGIN"
 jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
@@ -517,7 +521,7 @@ Expected local versions for this runbook:
 
 4. Verify the worker and MCP path with the `Runtime Verification` section.
 
-Do not apply any local overlay until the active cache path and version are
+Do not apply any local overlay until the active plugin path and version are
 known.
 
 ## Update claude-mem Plugin
@@ -538,7 +542,7 @@ codex plugin marketplace list
 codex plugin list
 codex mcp list
 
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 printf 'active_plugin=%s\n' "$PLUGIN"
 test -n "$PLUGIN" && jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 
@@ -572,7 +576,8 @@ codex plugin marketplace upgrade claude-mem-local
 codex plugin add claude-mem@claude-mem-local
 ```
 
-4. If the version or active cache remains stale, remove and add the plugin.
+4. If the version or active plugin path remains stale, remove and add the
+plugin.
 
 Use this only after the backup above:
 
@@ -581,10 +586,10 @@ codex plugin remove claude-mem@claude-mem-local
 codex plugin add claude-mem@claude-mem-local
 ```
 
-5. Re-discover the active installed cache.
+5. Re-discover the active Codex plugin path.
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 printf '%s\n' "$PLUGIN"
 test -n "$PLUGIN" && test -d "$PLUGIN"
 jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
@@ -592,8 +597,8 @@ jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 
 6. Reconcile the local overlay before calling the update complete.
 
-Do not blindly `rsync` an old overlay into the active cache. Check whether the
-target cache already has the balanced Codex hook helper files:
+Do not blindly `rsync` an old overlay into the active plugin path. Check
+whether the target plugin already has the balanced Codex hook helper files:
 
 ```bash
 test -f "$PLUGIN/scripts/codex-hook-spool.cjs"
@@ -686,7 +691,7 @@ apply, provider change, or Codex CLI upgrade.
 ```bash
 codex plugin list
 codex mcp list
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 printf 'active_plugin=%s\n' "$PLUGIN"
 jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 ```
@@ -796,18 +801,18 @@ hook-script exit codes before deciding the runtime is broken. The model reply
 can be `Ready.` while one best-effort context hook failed open.
 
 8. If Codex still prints `claude-mem: runtime not yet set up`, verify the
-active Codex cache install marker, not only the Claude Code cache:
+active Codex plugin install marker, not only the Claude Code cache:
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 test -f "$PLUGIN/.install-version" && cat "$PLUGIN/.install-version"
 node "$PLUGIN/scripts/version-check.js"
 ```
 
 If `version-check.js` reports runtime missing while `npx claude-mem status`
-shows the worker is running, the Codex cache may be missing `.install-version`.
-Re-run the installer, or copy/create the marker only after confirming the
-installed runtime version:
+shows the worker is running, the active Codex plugin path may be missing
+`.install-version`. Re-run the installer, or copy/create the marker only after
+confirming the installed runtime version:
 
 ```bash
 npx claude-mem@latest install
@@ -826,7 +831,7 @@ payload. A direct hook probe with `{}` is not sufficient because the adapter
 needs a session id, event name, cwd, and source.
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 PAYLOAD=$(mktemp)
 cat > "$PAYLOAD" <<JSON
 {"session_id":"codex-context-probe","hook_event_name":"SessionStart","cwd":"$PWD","source":"startup","transcript_path":"/tmp/codex-context-probe.jsonl"}
@@ -970,7 +975,7 @@ The older `13.4.0` balanced overlay used an async spool helper:
 scripts/codex-hook-spool.cjs
 ```
 
-The active cache also contains:
+The active 13.4.2 plugin tree also contains:
 
 ```text
 scripts/codex-hook-drain.cjs
@@ -984,7 +989,7 @@ overlay blindly with `rsync`; it will regress the active hook topology.
 Inspect active hook keys:
 
 ```bash
-PLUGIN=$(ls -dt ~/.codex/plugins/cache/claude-mem-local/claude-mem/[0-9]* 2>/dev/null | head -1)
+PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
 jq '.hooks | keys' "$PLUGIN/hooks/codex-hooks.json"
 ```
 
@@ -1002,8 +1007,8 @@ Marketplace snapshot:
 ~/.codex/.tmp/marketplaces/claude-mem-local/plugin/
 ```
 
-The installed cache is the runtime verification target. The marketplace
-snapshot alone is not sufficient evidence.
+The path reported by `codex plugin list` is the runtime verification target.
+The installed cache or marketplace snapshot alone is not sufficient evidence.
 
 Current 2026-06-08 active `13.4.0` checksums:
 
@@ -1023,7 +1028,7 @@ Current 2026-06-10 active `13.4.2` overlay checksums:
 .install-version                239a3ad110e5fdc31f26472fd7dd16a6763ce2c87f650aeaa079cdb606e6ad90
 hooks/codex-hooks.json          0aab2fcf8919c7dfd9059d128c65cc00e2f623ada68a4a37f467c0a10f84e23d
 hooks/hooks.json                574ae5e7860180858feead8f3b9f783fcd4f66102dec306de579de9cb0fad227
-scripts/codex-hook-output-filter.js ef4fe381b8030b75614def687049621f055d4150a5a2520fa7e1ab02fc7905da
+scripts/codex-hook-output-filter.js f43442908362f50efc744e489f4f6e98e5899e8e87c4eb367273b5b78d4dea60
 skills/standup/SKILL.md         3fb07d07acad20b6b6e5e8a8391ad90b8c08615749e4c268d281b9cc672e14a3
 ```
 

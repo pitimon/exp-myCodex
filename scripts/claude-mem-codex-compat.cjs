@@ -4,11 +4,13 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const childProcess = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "..");
 const home = os.homedir();
 const cacheRoot = path.join(home, ".codex", "plugins", "cache", "claude-mem-local", "claude-mem");
 const marketplaceRoot = path.join(home, ".codex", ".tmp", "marketplaces", "claude-mem-local", "plugin");
+const codexMarketplaceStagingRoot = path.join(home, ".codex", ".tmp", "marketplaces", ".staging");
 const claudeCacheRoot = path.join(home, ".claude", "plugins", "cache", "thedotmack", "claude-mem");
 const claudeMarketplaceRoot = path.join(home, ".claude", "plugins", "marketplaces", "thedotmack", "plugin");
 const requiredHookEvents = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
@@ -34,17 +36,67 @@ function listDirs(dir) {
   }
 }
 
-function findActivePlugin() {
+function isPluginRoot(plugin) {
+  return fs.existsSync(path.join(plugin, ".codex-plugin", "plugin.json"));
+}
+
+function readPluginManifest(plugin) {
+  return readJson(path.join(plugin, ".codex-plugin", "plugin.json"));
+}
+
+function normalizePluginRoot(plugin) {
+  if (!plugin) return null;
+  const trimmed = plugin.trim().replace(/\/+$/, "");
+  const nested = path.join(trimmed, "plugin");
+  if (isPluginRoot(trimmed)) return trimmed;
+  if (isPluginRoot(nested)) return nested;
+  return null;
+}
+
+function findCodexPluginListPlugin() {
+  try {
+    const result = childProcess.spawnSync("codex", ["plugin", "list"], {
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024 * 4,
+    });
+    if (result.status !== 0) return null;
+    for (const line of result.stdout.split(/\r?\n/)) {
+      if (!line.includes("claude-mem@claude-mem-local")) continue;
+      const plugin = normalizePluginRoot(line.trim().split(/\s+/).at(-1));
+      if (!plugin) continue;
+      try {
+        const manifest = readPluginManifest(plugin);
+        if (manifest.name === "claude-mem") return plugin;
+      } catch {
+        return plugin;
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function findVersionedCodexCache(version) {
+  const candidate = path.join(cacheRoot, version);
+  return fs.existsSync(candidate) ? candidate : null;
+}
+
+function findLatestCodexCache() {
   const dirs = listDirs(cacheRoot).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
-  const plugin = dirs.find((dir) => fs.existsSync(path.join(dir, ".codex-plugin", "plugin.json")));
+  const plugin = dirs.find(isPluginRoot);
   if (!plugin) {
     throw new Error(`active claude-mem Codex cache not found under ${cacheRoot}`);
   }
   return plugin;
 }
 
+function findActivePlugin() {
+  return findCodexPluginListPlugin() || findLatestCodexCache();
+}
+
 function readPluginVersion(plugin) {
-  return readJson(path.join(plugin, ".codex-plugin", "plugin.json")).version;
+  return readPluginManifest(plugin).version;
 }
 
 function findVersionedClaudeCache(version) {
@@ -52,13 +104,44 @@ function findVersionedClaudeCache(version) {
   return fs.existsSync(candidate) ? candidate : null;
 }
 
+function collectCodexStagingPlugins(version) {
+  return listDirs(codexMarketplaceStagingRoot)
+    .map((dir) => path.join(dir, "plugin"))
+    .filter((plugin) => {
+      const manifest = path.join(plugin, ".codex-plugin", "plugin.json");
+      if (!fs.existsSync(manifest)) return false;
+      try {
+        const parsed = readJson(manifest);
+        return parsed.name === "claude-mem" && parsed.version === version;
+      } catch {
+        return false;
+      }
+    });
+}
+
+function uniqTargets(targets) {
+  const seen = new Set();
+  return targets.filter((target) => {
+    if (!target.path || !fs.existsSync(target.path)) return false;
+    const resolved = fs.realpathSync(target.path);
+    if (seen.has(resolved)) return false;
+    seen.add(resolved);
+    return true;
+  });
+}
+
 function collectTargetRoots(activePlugin, version) {
-  return [
-    { kind: "codex-cache", path: activePlugin },
+  return uniqTargets([
+    { kind: "codex-active", path: activePlugin },
+    { kind: "codex-cache", path: findVersionedCodexCache(version) },
     { kind: "codex-marketplace", path: marketplaceRoot },
+    ...collectCodexStagingPlugins(version).map((plugin, index) => ({
+      kind: `codex-staging-${index + 1}`,
+      path: plugin,
+    })),
     { kind: "claude-cache", path: findVersionedClaudeCache(version) },
     { kind: "claude-marketplace", path: claudeMarketplaceRoot },
-  ].filter((target) => target.path && fs.existsSync(target.path));
+  ]);
 }
 
 function walk(dir, prefix = "") {
@@ -203,27 +286,104 @@ function verify() {
         errors.push(`${target.kind}:${rel} missing PreToolUse`);
       }
     }
+    if (!fs.existsSync(path.join(target.path, "scripts", "codex-hook-output-filter.js"))) {
+      errors.push(`${target.kind}:scripts/codex-hook-output-filter.js missing`);
+    }
   }
   for (const issue of state.skillDescriptionIssues) {
     errors.push(`${issue.file} description exceeds ${issue.max} chars (${issue.chars})`);
   }
+  const hookSmokes = [];
+  function assertNoSuppressOutput(stdout, label) {
+    const lines = stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length !== 1) {
+      errors.push(`${label} emitted ${lines.length} JSON lines`);
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(lines[0]);
+      if (parsed.suppressOutput) errors.push(`${label} emitted suppressOutput`);
+      if (parsed.continue !== true) errors.push(`${label} did not return continue=true`);
+      return parsed;
+    } catch {
+      errors.push(`${label} emitted invalid JSON`);
+      return null;
+    }
+  }
+
   if (state.filterExists) {
     const filter = path.join(state.activePlugin, "scripts", "codex-hook-output-filter.js");
-    const child = require("child_process").spawnSync(process.execPath, [filter, "--event", "PostToolUse"], {
+    const child = childProcess.spawnSync(process.execPath, [filter, "--event", "PostToolUse"], {
       input: "{\"continue\":true,\"suppressOutput\":true}\n",
       encoding: "utf8",
     });
     if (child.status !== 0) errors.push("codex-hook-output-filter.js exited non-zero");
     else {
-      try {
-        const parsed = JSON.parse(child.stdout.trim());
-        if (parsed.suppressOutput || parsed.continue !== true) errors.push("codex-hook-output-filter.js did not remove suppressOutput");
-      } catch {
-        errors.push("codex-hook-output-filter.js emitted invalid JSON");
-      }
+      const parsed = assertNoSuppressOutput(child.stdout, "codex-hook-output-filter.js");
+      if (parsed) hookSmokes.push({ event: "filter", ok: true, keys: Object.keys(parsed) });
     }
   }
-  return { ...state, ok: errors.length === 0, errors };
+
+  const runner = path.join(state.activePlugin, "scripts", "bun-runner.js");
+  const worker = path.join(state.activePlugin, "scripts", "worker-service.cjs");
+  const filter = path.join(state.activePlugin, "scripts", "codex-hook-output-filter.js");
+  if (fs.existsSync(runner) && fs.existsSync(worker) && fs.existsSync(filter)) {
+    const smokePayloads = [
+      {
+        event: "file-context",
+        payload: {
+          session_id: "codex-compat-verify",
+          hook_event_name: "PreToolUse",
+          cwd: repoRoot,
+          tool_name: "Read",
+          tool_input: { file_path: path.join(repoRoot, "README.md") },
+          transcript_path: "/tmp/codex-compat-verify.jsonl",
+        },
+      },
+      {
+        event: "observation",
+        payload: {
+          session_id: "codex-compat-verify",
+          hook_event_name: "PostToolUse",
+          cwd: repoRoot,
+          tool_name: "Read",
+          tool_input: { file_path: path.join(repoRoot, "README.md") },
+          tool_response: { output: "compat verification probe" },
+          transcript_path: "/tmp/codex-compat-verify.jsonl",
+        },
+      },
+    ];
+    for (const smoke of smokePayloads) {
+      const child = childProcess.spawnSync(
+        process.execPath,
+        [runner, worker, "hook", "codex", smoke.event],
+        {
+          input: `${JSON.stringify(smoke.payload)}\n`,
+          encoding: "utf8",
+          env: { ...process.env, CLAUDE_PLUGIN_ROOT: state.activePlugin },
+        },
+      );
+      if (child.status !== 0) {
+        errors.push(`hook ${smoke.event} exited non-zero`);
+        continue;
+      }
+      const filtered = childProcess.spawnSync(process.execPath, [filter, "--event", smoke.event], {
+        input: child.stdout,
+        encoding: "utf8",
+      });
+      if (filtered.status !== 0) {
+        errors.push(`hook ${smoke.event} filter exited non-zero`);
+        continue;
+      }
+      const parsed = assertNoSuppressOutput(filtered.stdout, `hook ${smoke.event}`);
+      if (parsed) hookSmokes.push({ event: smoke.event, ok: true, keys: Object.keys(parsed) });
+    }
+  }
+
+  return { ...state, ok: errors.length === 0, errors, hookSmokes };
 }
 
 function print(value, asJson) {

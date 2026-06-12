@@ -203,8 +203,9 @@ node scripts/claude-mem-codex-compat.cjs verify --json
 Expected:
 
 - Existing target files are backed up with `.bak-compat-<timestamp>`.
-- The overlay is applied to the active Codex cache, Codex marketplace snapshot,
-  Claude cache, and Claude marketplace when those roots exist.
+- The overlay is applied to the active `codex plugin list` path, Codex cache,
+  Codex staging roots, Claude cache, and Claude marketplace when those roots
+  exist.
 - `verify` returns `ok=true`.
 - Codex is restarted before evaluating startup behavior.
 
@@ -222,8 +223,9 @@ node scripts/claude-mem-codex-compat.cjs apply --json
 node scripts/claude-mem-codex-compat.cjs verify --json
 ```
 
-Expected: the active cache path is rediscovered, the version is documented, and
-no old overlay is applied unless the exact-version overlay exists.
+Expected: the active Codex plugin path is rediscovered, the version is
+documented, and no old overlay is applied unless the exact-version overlay
+exists.
 
 ### 11. Incident Hook Disable And Restore
 

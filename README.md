@@ -68,7 +68,7 @@ For a human reading the repo, use this path:
 |  ------------------                 --------------                 ----------- |
 |  codex plugin add                   codex plugin list              8-Habit     |
 |  marketplace upgrade                codex mcp list                 Governance  |
-|  remove/add fallback                active cache path              RTK         |
+|  remove/add fallback                active plugin path             RTK         |
 |                                     worker health                  TokenTracker|
 |                                     project index                  Obsidian    |
 |                                     service status                             |
@@ -110,7 +110,7 @@ Every runbook pushes the operator toward observable evidence:
 
 | Layer | Do Not Trust Alone | Verify Instead |
 | --- | --- | --- |
-| Codex plugins | repo files, release tags, old screenshots | `codex plugin list`, active cache path, installed version |
+| Codex plugins | repo files, release tags, old screenshots | `codex plugin list`, active plugin path, installed version |
 | MCP | plugin manifest only | `codex mcp list`, tool availability, smoke queries |
 | `claude-mem` worker | one healthy HTTP response | port, `workerPath`, process owner, `worker.pid`, settings |
 | `claude-mem` hooks | startup banner text | hook JSON shape, `SessionStart` payload probe, warm-up behavior |
