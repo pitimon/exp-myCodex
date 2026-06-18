@@ -43,16 +43,36 @@ Read https://github.com/pitimon/exp-myCodex
 Then follow docs/prompts/codex-plugin-validation-prompt.md.
 ```
 
+That prompt is intentionally short. The validation prompt itself now tells the
+target Codex session to treat
+`https://github.com/pitimon/exp-myCodex/issues/5` as the live errata thread for
+`claude-mem` hook failures before it declares a new machine healthy. This keeps
+the first prompt stable while the operational details continue to change across
+Codex, `claude-mem`, Node, shell, and marketplace updates.
+
+Expected outcome on a target workstation is not "the latest plugin installed."
+Expected outcome is a concise bootstrap report that proves the active runtime:
+
+- plugin and marketplace state were read from the target machine
+- `claude-mem` worker health was matched to the current user
+- Codex plugin path, versioned cache, staging roots, and user-level hooks were
+  inspected separately
+- any exact-version overlay or issue #5 workaround was applied only after the
+  active version was identified
+- a real `codex exec` lifecycle smoke completed startup, prompt, tool, and stop
+  hooks with no `Failed` entries
+
 For a human reading the repo, use this path:
 
 | Step | Read | Outcome |
 | --- | --- | --- |
 | 1 | `docs/README.md` | Understand the documentation map |
 | 2 | `docs/prompts/codex-plugin-validation-prompt.md` | Get the target-machine validation prompt |
-| 3 | `docs/manifests/codex-plugins.yaml` | See recommended plugin selectors and versions |
-| 4 | `docs/manifests/codex-tools.yaml` | See adjacent CLI tools and smoke tests |
-| 5 | `docs/runbooks/plugins/claude-mem.md` | Validate the memory layer |
-| 6 | `docs/runbooks/claude-mem-scenario-tests.md` | Stress-test the runbook on a real machine |
+| 3 | `https://github.com/pitimon/exp-myCodex/issues/5` | Read the live `claude-mem` hook errata |
+| 4 | `docs/manifests/codex-plugins.yaml` | See recommended plugin selectors and versions |
+| 5 | `docs/manifests/codex-tools.yaml` | See adjacent CLI tools and smoke tests |
+| 6 | `docs/runbooks/plugins/claude-mem.md` | Validate the memory layer |
+| 7 | `docs/runbooks/claude-mem-scenario-tests.md` | Stress-test the runbook on a real machine |
 
 ## System View
 
@@ -143,12 +163,28 @@ The runbook checks:
 - foreign worker detection on shared hosts
 - `mcp-search` availability
 - unsupported `suppressOutput` hook regressions
-- exact-version overlay handling for `13.4.0`, `13.4.1`, and `13.4.2`
+- exact-version overlay handling for `13.4.0`, `13.4.1`, `13.4.2`, and `13.6.2`
 - scenario tests for read-only and state-changing validation
 
 When `claude-mem` releases a new version, this repo intentionally treats that as
 a new runtime contract. Do not apply an old overlay to a new cache just because
 the file names look familiar.
+
+Issue #5 is the living record for this failure class:
+
+```text
+https://github.com/pitimon/exp-myCodex/issues/5
+```
+
+Use it for newly observed hook failures and version-specific workarounds. Keep
+the repo runbooks as the stable baseline, and add concise issue comments when a
+target machine reveals a new Codex or `claude-mem` runtime edge case.
+
+The current verified Codex baseline is `claude-mem` `13.6.2` with the local
+overlay under `overlays/claude-mem/13.6.2/`. That overlay records the
+workstation fix for Codex 0.140 rejecting `hooks/codex-hooks.json` when the
+manifest contains unsupported top-level keys, plus the marketplace-refresh drift
+that can remove `.install-version` and `scripts/codex-hook-output-filter.js`.
 
 ## The Obsidian Pattern
 
@@ -199,6 +235,7 @@ overlays/
     13.4.0/
     13.4.1/
     13.4.2/
+    13.6.2/
 scripts/
   claude-mem-codex-compat.cjs
 ```

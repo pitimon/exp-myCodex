@@ -1,17 +1,19 @@
 # Versions last captured from the source workstation runbook set.
 # Re-check on the target workstation after install/update.
 
-verified_at: "2026-06-10"
+verified_at: "2026-06-18"
 plugins:
   claude-mem:
     selector: claude-mem@claude-mem-local
-    version: "13.4.2"
-    ref: v13.4.2
+    version: "13.6.2"
+    ref: v13.6.2
     notes:
-      - Codex overlay available under overlays/claude-mem/13.4.2/
-      - Version 13.4.2 overlay fixes the standup skill description length, PreToolUse/PostToolUse suppressOutput rejection, and empty SessionStart output.
-      - claude-mem is pinned to v13.4.2 on the source workstation; apply overlays only when the active cache version exactly matches the overlay directory.
-      - Run post-install verification and a fresh warm-up smoke before calling healthy.
+      - Codex overlay available under overlays/claude-mem/13.6.2/
+      - Version 13.6.2 overlay removes the Codex-rejected top-level hooks description field, restores .install-version, restores scripts/codex-hook-output-filter.js, and pins hook resolver order to 13.6.2 Codex/local roots before older Claude cache fallbacks.
+      - claude-mem is pinned to a patched local v13.6.2 snapshot on the source workstation; apply overlays only when the active cache version exactly matches the overlay directory.
+      - Issue #5 remains the living field-observation thread for marketplace refresh drift, user-level hooks, missing marker/filter files, and lifecycle smoke failures.
+      - Historical overlays remain available for exact 13.4.x runtimes, but must not be copied forward.
+      - Run post-install verification and fresh startup/tool-triggering codex exec smokes before calling healthy.
 
   8-habit-ai-dev:
     selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev

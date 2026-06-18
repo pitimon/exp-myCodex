@@ -68,13 +68,13 @@ historical unless an old session or old cache is being debugged.
 
 ## Current Verified State
 
-Verified on 2026-06-10:
+Verified on 2026-06-18:
 
 ```text
 worker health endpoint: http://127.0.0.1:37701/api/health
 worker status: ok
-worker runtime version: 13.4.2
-Codex plugin versions verified: 13.4.0, 13.4.1, 13.4.2
+worker runtime version: 13.6.2
+Codex plugin versions verified: 13.4.0, 13.4.1, 13.4.2, 13.6.2
 worker path: a current-user claude-mem worker-service.cjs path
 worker provider: claude
 worker auth: Claude Code OAuth token read from system keychain at spawn
@@ -119,9 +119,12 @@ no-op warm-up alone as proof that substantive work cannot be stored.
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.0/
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.1/
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.2/
+~/.codex/plugins/cache/claude-mem-local/claude-mem/13.6.2/
+~/.codex/local-marketplaces/claude-mem-local/plugin/
 overlays/claude-mem/13.4.0/
 overlays/claude-mem/13.4.1/
 overlays/claude-mem/13.4.2/
+overlays/claude-mem/13.6.2/
 ```
 
 ## Startup Behavior
@@ -174,14 +177,67 @@ version as a new runtime contract until verified. The goal is not to pin users
 forever; it is to avoid silently applying stale hook patches to a changed
 bundle.
 
-The source workstation pins the Codex marketplace to `v13.4.2` until a newer
-bundle has a reviewed overlay:
+The source workstation pins the Codex marketplace to `v13.6.2` plus the local
+overlay until upstream publishes an equivalent Codex-compatible bundle:
 
 ```toml
 [marketplaces.claude-mem-local]
 source = "https://github.com/thedotmack/claude-mem.git"
-ref = "v13.4.2"
+ref = "v13.6.2"
 ```
+
+### Live Errata: Issue #5
+
+The public living thread for recurring Codex `claude-mem` hook failures is:
+
+```text
+https://github.com/pitimon/exp-myCodex/issues/5
+```
+
+Read the latest relevant comments before applying a workaround on a target
+machine. Use the runbook as the stable baseline and issue #5 as the place to
+record version-specific or machine-specific drift.
+
+Known recurring patterns from issue #5:
+
+- `codex plugin list` can point at
+  `~/.codex/.tmp/marketplaces/claude-mem-local/plugin` while the versioned
+  cache also exists under
+  `~/.codex/plugins/cache/claude-mem-local/claude-mem/<version>/`.
+- Patching only the versioned cache can leave the active Codex runtime broken.
+- Codex staging roots under `~/.codex/.tmp/marketplaces/.staging/*/plugin` can
+  matter during or after marketplace upgrades.
+- Claude cache/marketplace roots can still matter when the shared worker or
+  hook commands resolve through Claude-side plugin paths.
+- User-level hooks in `~/.codex/hooks.json` are a separate layer from
+  plugin-owned hooks in `<plugin-root>/hooks/codex-hooks.json`; inspect both.
+- Missing `.install-version` can make `version-check.js` report a missing
+  runtime even when the worker is healthy.
+- Missing `scripts/codex-hook-output-filter.js` can break user-level hooks that
+  pipe through the filter.
+- A hook command that exits 0 with empty stdout can still show up as a failed
+  Codex lifecycle hook when Codex expects hook JSON.
+- A warm-up-only prompt validates startup behavior, but it does not validate
+  `PreToolUse` or `PostToolUse`.
+
+Latest observed 2026-06-18 recurrence:
+
+```text
+claude-mem 13.6.2 upstream still shipped plugin/hooks/codex-hooks.json with a
+top-level description field, which Codex 0.140 rejects. Marketplace refreshes
+also overwrote the local .install-version / codex-hook-output-filter.js patch,
+and old hook resolver order could restart or probe a 13.6.1 Claude cache after
+codex plugin list reported 13.6.2.
+```
+
+The verified local fix is `overlays/claude-mem/13.6.2/`: remove unsupported
+hook-manifest top-level keys, restore the install marker and Codex hook output
+filter, and prefer 13.6.2 Codex/local roots before older Claude fallbacks.
+
+When a new version has no exact overlay in this repo, do not copy an older
+overlay forward. Enter discovery mode, collect the facts above, and add a
+concise issue #5 comment if the machine reveals a new failure mode or a reusable
+workaround.
 
 Preferred workflow from this repo:
 
@@ -200,11 +256,12 @@ Exit behavior:
   exactly matches the active plugin version, and exits `2` if no overlay exists.
 - `verify` exits non-zero if required hook events are missing, hook files still
   contain top-level `suppressOutput`, `.install-version` is missing, exact hook
-  stdout smoke checks fail, or any skill description exceeds Codex limits.
-- The 13.4.2 helper applies overlays to the active `codex plugin list` path,
-  Codex cache, Codex staging roots, Claude cache, and Claude marketplace roots
-  when they exist, because Codex hook resolution can fall back across those
-  plugin trees.
+  stdout smoke checks fail, user-level hook wiring has known unsafe drift, or
+  any skill description exceeds Codex limits.
+- The helper applies overlays to the active `codex plugin list` path, Codex
+  local marketplace snapshot, Codex cache, Codex staging roots, Claude cache,
+  and Claude marketplace roots when they exist, because Codex hook resolution
+  can fall back across those plugin trees.
 
 Version handling rules:
 
@@ -212,10 +269,10 @@ Version handling rules:
   listing alone.
 - Apply an overlay only when `overlays/claude-mem/<version>/` exists and the
   active plugin reports the same version.
-- Do not apply a `13.4.0` overlay to `13.4.1`, or a `13.4.1` overlay to a newer
-  version such as `13.4.2`, unless the maintainer has reviewed that exact
-  bundle and updated this repo. Use `overlays/claude-mem/13.4.2/` only with
-  active plugin version `13.4.2`.
+- Do not apply a `13.4.0` overlay to `13.4.1`, a `13.4.2` overlay to `13.6.2`,
+  or any overlay to a newer version unless the maintainer has reviewed that
+  exact bundle and updated this repo. Use `overlays/claude-mem/13.6.2/` only
+  with active plugin version `13.6.2`.
 - If the active version has no overlay, run read-only verification first and
   report `overlay=missing_for_version:<version>`.
 - A missing overlay is not automatically unhealthy. It means the workstation is
@@ -477,7 +534,7 @@ plugin installed.
 1. Add or refresh the marketplace.
 
 ```bash
-codex plugin marketplace add thedotmack/claude-mem --ref v13.4.2
+codex plugin marketplace add thedotmack/claude-mem --ref v13.6.2
 codex plugin marketplace list
 ```
 
@@ -517,6 +574,7 @@ Expected local versions for this runbook:
 13.4.0
 13.4.1
 13.4.2
+13.6.2
 ```
 
 4. Verify the worker and MCP path with the `Runtime Verification` section.
@@ -650,17 +708,23 @@ done
 rsync -a "$PATCH_ROOT"/ "$PLUGIN"/
 ```
 
-For `13.4.2`, also patch every live-resolvable plugin root if it is present,
-because Codex hook resolution can fall back to Claude-side plugin trees:
+For `13.6.2`, also patch every live-resolvable plugin root if it is present,
+because Codex hook resolution can fall back to local marketplace and
+Claude-side plugin trees:
 
 ```bash
+LOCAL_MARKET="$HOME/.codex/local-marketplaces/claude-mem-local/plugin"
 MARKET="$HOME/.codex/.tmp/marketplaces/claude-mem-local/plugin"
-CLAUDE_CACHE="$HOME/.claude/plugins/cache/thedotmack/claude-mem/13.4.2"
+CLAUDE_CACHE="$HOME/.claude/plugins/cache/thedotmack/claude-mem/13.6.2"
 CLAUDE_MARKET="$HOME/.claude/plugins/marketplaces/thedotmack/plugin"
+test -d "$LOCAL_MARKET" && rsync -a "$PATCH_ROOT"/ "$LOCAL_MARKET"/
 test -d "$MARKET" && rsync -a "$PATCH_ROOT"/ "$MARKET"/
 test -d "$CLAUDE_CACHE" && rsync -a "$PATCH_ROOT"/ "$CLAUDE_CACHE"/
 test -d "$CLAUDE_MARKET" && rsync -a "$PATCH_ROOT"/ "$CLAUDE_MARKET"/
 ```
+
+For older exact-version overlays, follow their overlay README and do not copy
+the 13.6.2 hook resolver back to 13.4.x without review.
 
 For `13.4.0`, after applying the overlay, make the `PostToolUse` hook target
 the current machine's active plugin root:
@@ -741,7 +805,28 @@ if [ -f ~/.codex/scripts/codex-stop-obsidian-capture.cjs ]; then
 fi
 ```
 
-4. Verify worker health.
+4. Inspect user-level Codex hooks separately from plugin hooks.
+
+```bash
+if [ -f ~/.codex/hooks.json ]; then
+  jq '.hooks | keys' ~/.codex/hooks.json
+  rg -n 'codex-hook-output-filter|version-check|worker-service|suppressOutput' \
+    ~/.codex/hooks.json
+else
+  printf 'user_codex_hooks=missing\n'
+fi
+
+jq '.hooks | keys' "$PLUGIN/hooks/codex-hooks.json"
+rg -n 'codex-hook-output-filter|version-check|worker-service|suppressOutput' \
+  "$PLUGIN/hooks/codex-hooks.json"
+```
+
+If user-level hooks pipe through `scripts/codex-hook-output-filter.js`, verify
+that the command resolves a plugin root where the filter exists. If
+`SessionStart` has duplicate version-check hooks, direct command checks must
+prove each hook returns valid JSON or is intentionally skipped.
+
+5. Verify worker health.
 
 ```bash
 jq '{pid,port,startedAt}' ~/.claude-mem/worker.pid
@@ -754,7 +839,7 @@ done
 ps -axo pid,command | grep -E 'claude-mem|worker-service' | grep -v grep || true
 ```
 
-5. Verify settings without secrets.
+6. Verify settings without secrets.
 
 ```bash
 jq '{
@@ -769,7 +854,7 @@ jq '{
 }' ~/.claude-mem/settings.json
 ```
 
-6. Verify search and queue behavior.
+7. Verify search and queue behavior.
 
 ```bash
 sqlite3 ~/.claude-mem/claude-mem.db \
@@ -792,7 +877,7 @@ command -v sqlite3 || printf 'sqlite3=missing\n'
 test -f ~/.claude-mem/claude-mem.db && printf 'database=present\n'
 ```
 
-7. Start a fresh Codex session and run the warm-up prompt.
+8. Start a fresh Codex session and run the warm-up prompt.
 
 Expected result: exact `Ready.`, with no hook JSON error, hook exit-code error,
 or `unsupported suppressOutput` message. If human-readable Codex output still
@@ -800,7 +885,28 @@ shows one aggregate `SessionStart Failed`, collect JSON-mode output and direct
 hook-script exit codes before deciding the runtime is broken. The model reply
 can be `Ready.` while one best-effort context hook failed open.
 
-8. If Codex still prints `claude-mem: runtime not yet set up`, verify the
+9. Run a tool-triggering Codex lifecycle smoke.
+
+```bash
+codex exec --cd "$PWD" 'Use the shell to run `printf hook-smoke`, then reply exactly: Done.'
+```
+
+Expected lifecycle result:
+
+```text
+SessionStart Completed
+UserPromptSubmit Completed
+PreToolUse Completed
+PostToolUse Completed
+Stop Completed
+no Failed entries
+```
+
+Do not call the setup healthy until a real lifecycle run exercises
+`PreToolUse` and `PostToolUse`. File inspection and direct hook command smokes
+are useful diagnostics, but Codex lifecycle output is the acceptance gate.
+
+10. If Codex still prints `claude-mem: runtime not yet set up`, verify the
 active Codex plugin install marker, not only the Claude Code cache:
 
 ```bash
@@ -826,7 +932,7 @@ chmod 600 "$PLUGIN/.install-version"
 node "$PLUGIN/scripts/version-check.js"
 ```
 
-9. Validate recent-context injection with a real Codex-shaped `SessionStart`
+11. Validate recent-context injection with a real Codex-shaped `SessionStart`
 payload. A direct hook probe with `{}` is not sufficient because the adapter
 needs a session id, event name, cwd, and source.
 
@@ -965,9 +1071,10 @@ PostToolUse
 Stop
 ```
 
-The active `13.4.2` Codex hooks use `scripts/codex-hook-output-filter.js` to
+The active `13.6.2` Codex hooks use `scripts/codex-hook-output-filter.js` to
 strip legacy top-level `suppressOutput` fields from hook JSON before Codex sees
-them.
+them. Its `hooks/codex-hooks.json` must also have only one top-level key,
+`hooks`; a top-level `description` key is a parse-time failure in Codex 0.140.
 
 The older `13.4.0` balanced overlay used an async spool helper:
 
@@ -975,7 +1082,7 @@ The older `13.4.0` balanced overlay used an async spool helper:
 scripts/codex-hook-spool.cjs
 ```
 
-The active 13.4.2 plugin tree also contains:
+The older 13.4.2 plugin tree also contains:
 
 ```text
 scripts/codex-hook-drain.cjs
@@ -1030,6 +1137,15 @@ hooks/codex-hooks.json          0aab2fcf8919c7dfd9059d128c65cc00e2f623ada68a4a37
 hooks/hooks.json                574ae5e7860180858feead8f3b9f783fcd4f66102dec306de579de9cb0fad227
 scripts/codex-hook-output-filter.js f43442908362f50efc744e489f4f6e98e5899e8e87c4eb367273b5b78d4dea60
 skills/standup/SKILL.md         3fb07d07acad20b6b6e5e8a8391ad90b8c08615749e4c268d281b9cc672e14a3
+```
+
+Current 2026-06-18 active `13.6.2` overlay checksums:
+
+```text
+.install-version                022d5fde6fc0b238f179b0bbc0a6087eeb14e82841f1e613071c9b04f11748a1
+hooks/codex-hooks.json          e0bbceee7f1d85a2ab3fd6974e9f9f3b08e4672fe738b55656382523e5f8a272
+scripts/codex-hook-output-filter.js f43442908362f50efc744e489f4f6e98e5899e8e87c4eb367273b5b78d4dea60
+README.md                       7cd5a7abb4fa8e844b99fec9b89a870dad95845484bbb021b469348363de471f
 ```
 
 Syntax and hook checks:
