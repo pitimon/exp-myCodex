@@ -119,12 +119,23 @@ For TokenTracker specifically:
 - Verify upstream package metadata from `https://github.com/pitimon/TokenTracker`
   or `npm view @ipv9/tokentracker-cli version bin engines --json` before
   pinning a service.
+- Verify `node`, `npm`, and `npx` from the same shell or service environment
+  that will run TokenTracker. Node `<20` is unsupported for durable service
+  mode even if `--help` still prints with `EBADENGINE` warnings.
+- On Linux/SSH with `nvm`, source `~/.nvm/nvm.sh` or use absolute `node`/`npx`
+  paths before service validation.
 - For background service mode, choose the platform section in the runbook:
   Ubuntu/Linux `systemd --user`, macOS LaunchAgent, Windows PowerShell
   Scheduled Task, or WSL.
 - On Linux systemd user services, set both absolute `npx` in `ExecStart=` and
   `Environment=PATH=<node-dir>:/usr/local/bin:/usr/bin:/bin`, especially for
   NVM/Volta/asdf Node installs.
+- On Windows PowerShell 5.1, prefer `-DontStopIfGoingOnBatteries`; do not use
+  task-setting parameters unless `Get-Command New-ScheduledTaskSettingsSet`
+  confirms they exist on that host.
+- Report whether the first dashboard run wrote local TokenTracker config or
+  notify hooks. Do not call a run read-only if `serve` performed first-time
+  setup.
 - Verify service-manager state, dashboard HTTP 200, and
   `npx --yes @ipv9/tokentracker-cli@0.39.13 doctor --json`.
 

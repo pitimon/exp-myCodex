@@ -78,6 +78,10 @@ tools:
     sync_command:
       - npx --yes @ipv9/tokentracker-cli sync --auto
     smoke_tests:
+      - node --version
+      - npm view @ipv9/tokentracker-cli version bin engines dist-tags --json
       - npx --yes @ipv9/tokentracker-cli --help
       - npx --yes @ipv9/tokentracker-cli status
       - npx --yes @ipv9/tokentracker-cli doctor --json
+      - service manager reports dashboard running when background mode is enabled
+      - curl or Invoke-WebRequest returns HTTP 200 from http://127.0.0.1:<port>/

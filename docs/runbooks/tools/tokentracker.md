@@ -41,11 +41,50 @@ sync only when the operator understands where data is sent.
 - `npm` and `npx` available in the service environment
 - A writable home directory for `~/.tokentracker/`
 
+Field-tested caveats:
+
+- On Ubuntu/Linux, SSH may not load Node from `nvm`. Source `~/.nvm/nvm.sh` or
+  use absolute `node`/`npx` paths before validating a service.
+- On Windows, `npx --help` may still run on Node 18 with `EBADENGINE` warnings.
+  Treat Node `<20` as unsupported for a durable service even if a light smoke
+  appears to pass.
+- The first dashboard run can create `~/.tokentracker/` and install or update
+  AI-tool notify hooks. For read-only QA, start with package metadata and
+  `--help`; run dashboard/service smokes only when local config writes are
+  acceptable.
+
 Verify the package:
 
 ```bash
 npm view @ipv9/tokentracker-cli version bin engines --json
 npx --yes @ipv9/tokentracker-cli --help
+```
+
+Linux preflight:
+
+```bash
+command -v node npm npx
+node --version
+npm --version
+npx --version
+```
+
+If Node is installed through `nvm`:
+
+```bash
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm use <version>
+```
+
+Windows PowerShell preflight:
+
+```powershell
+Get-Command node,npm,npx,npx.cmd
+node --version
+npm --version
+npx --version
+npm view @ipv9/tokentracker-cli version bin engines --json
 ```
 
 ## Foreground Use
