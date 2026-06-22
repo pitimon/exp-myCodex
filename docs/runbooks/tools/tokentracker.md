@@ -1,7 +1,7 @@
 # TokenTracker CLI Runbook
 
-Date: 2026-06-08
-Status: Public extended install and service runbook
+Date: 2026-06-22
+Status: Public install, validation, and background-service runbook
 
 ## Purpose
 
@@ -11,7 +11,7 @@ a foreground command or background service.
 The public npm package verified for this handoff is:
 
 ```text
-@ipv9/tokentracker-cli@0.39.6
+@ipv9/tokentracker-cli@0.39.13
 ```
 
 The package currently provides these binary aliases:
@@ -23,9 +23,9 @@ tokentracker-cli
 tokentracker-tracker
 ```
 
-The package name `@ipv9/tokentracker` was not available in the npm registry at
-the time this runbook was written. Use `@ipv9/tokentracker-cli` unless the
-manifest is updated after a future package rename.
+The package name `@ipv9/tokentracker` was still unavailable in the npm registry
+when rechecked on 2026-06-22. Use `@ipv9/tokentracker-cli` unless the manifest
+is updated after a future package rename.
 
 ## Safety
 
@@ -87,6 +87,16 @@ that is intentional. The maintained macOS installer skips automatic local sync
 when `TOKENTRACKER_DEVICE_TOKEN` or `~/.tokentracker/tracker/config.json`
 `deviceToken` is configured.
 
+Recommended service options:
+
+- Ubuntu/Linux desktop: use a `systemd --user` service for one logged-in user.
+- Ubuntu/Linux server: add `loginctl enable-linger "$USER"` when the dashboard
+  must survive logout.
+- macOS: use a LaunchAgent when the dashboard should start at user login.
+- Windows PowerShell: use a per-user Scheduled Task.
+- WSL: use systemd inside the distro when available; otherwise use a Windows
+  Scheduled Task wrapper around `wsl.exe`.
+
 ## macOS LaunchAgent
 
 If installing from the TokenTracker project checkout, use the packaged script:
@@ -113,7 +123,7 @@ cat > ~/Library/LaunchAgents/com.pitimon.tokentracker.dashboard.plist <<'PLIST'
     <string>/usr/bin/env</string>
     <string>npx</string>
     <string>--yes</string>
-    <string>@ipv9/tokentracker-cli</string>
+    <string>@ipv9/tokentracker-cli@0.39.13</string>
     <string>serve</string>
     <string>--sync</string>
     <string>--no-open</string>
@@ -155,7 +165,7 @@ launchctl bootout "gui/$(id -u)" ~/Library/LaunchAgents/com.pitimon.tokentracker
 rm -f ~/Library/LaunchAgents/com.pitimon.tokentracker.dashboard.plist
 ```
 
-## Linux systemd User Service
+## Ubuntu / Linux systemd User Service
 
 Use a user service when the dashboard is for one account:
 
@@ -176,7 +186,7 @@ After=network-online.target
 [Service]
 Type=simple
 Environment=PATH=__NODE_DIR__:/usr/local/bin:/usr/bin:/bin
-ExecStart=__NPX_BIN__ --yes @ipv9/tokentracker-cli@0.39.6 serve --sync --no-open --port 7680
+ExecStart=__NPX_BIN__ --yes @ipv9/tokentracker-cli@0.39.13 serve --sync --no-open --port 7680
 Restart=always
 RestartSec=5
 WorkingDirectory=%h
@@ -214,7 +224,7 @@ Description=TokenTracker local sync
 [Service]
 Type=oneshot
 Environment=PATH=__NODE_DIR__:/usr/local/bin:/usr/bin:/bin
-ExecStart=__NPX_BIN__ --yes @ipv9/tokentracker-cli@0.39.6 sync --auto
+ExecStart=__NPX_BIN__ --yes @ipv9/tokentracker-cli@0.39.13 sync --auto
 WorkingDirectory=%h
 UNIT
 
@@ -246,7 +256,7 @@ systemctl --user status tokentracker-dashboard.service
 systemctl --user list-timers tokentracker-sync.timer
 journalctl --user -u tokentracker-dashboard.service -n 100 --no-pager
 curl -fsS http://127.0.0.1:7680/ >/dev/null
-npx --yes @ipv9/tokentracker-cli@0.39.6 doctor --json
+npx --yes @ipv9/tokentracker-cli@0.39.13 doctor --json
 ```
 
 Uninstall:
@@ -262,6 +272,8 @@ systemctl --user daemon-reload
 ## Windows PowerShell Scheduled Task
 
 Use PowerShell as the current user. This keeps the dashboard alive after login.
+Run PowerShell in the account that owns the AI tool configs; administrator
+rights are not required for per-user scheduled tasks.
 
 Find `npx.cmd`:
 
@@ -275,7 +287,7 @@ Create the dashboard task:
 ```powershell
 $Action = New-ScheduledTaskAction `
   -Execute $Npx `
-  -Argument '--yes @ipv9/tokentracker-cli serve --sync --no-open --port 7680'
+  -Argument '--yes @ipv9/tokentracker-cli@0.39.13 serve --sync --no-open --port 7680'
 
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
 $Settings = New-ScheduledTaskSettingsSet `
@@ -300,7 +312,7 @@ Create a periodic sync task:
 ```powershell
 $SyncAction = New-ScheduledTaskAction `
   -Execute $Npx `
-  -Argument '--yes @ipv9/tokentracker-cli sync --auto'
+  -Argument '--yes @ipv9/tokentracker-cli@0.39.13 sync --auto'
 
 $SyncTrigger = New-ScheduledTaskTrigger `
   -Once `
@@ -321,7 +333,7 @@ Verify:
 Get-ScheduledTask -TaskName 'TokenTracker Dashboard','TokenTracker Local Sync'
 Get-ScheduledTaskInfo -TaskName 'TokenTracker Dashboard'
 Invoke-WebRequest http://127.0.0.1:7680/ -UseBasicParsing
-npx --yes @ipv9/tokentracker-cli doctor --json
+npx --yes @ipv9/tokentracker-cli@0.39.13 doctor --json
 ```
 
 Uninstall:
@@ -353,7 +365,7 @@ login:
 ```powershell
 $Wsl = "$env:WINDIR\System32\wsl.exe"
 $Distro = 'Ubuntu'
-$Command = "bash -lc 'npx --yes @ipv9/tokentracker-cli serve --sync --no-open --port 7680'"
+$Command = "bash -lc 'npx --yes @ipv9/tokentracker-cli@0.39.13 serve --sync --no-open --port 7680'"
 
 $Action = New-ScheduledTaskAction `
   -Execute $Wsl `
@@ -396,7 +408,7 @@ npx --yes @ipv9/tokentracker-cli@latest --help
 For pinned services, edit the service command to the target version:
 
 ```text
-@ipv9/tokentracker-cli@0.39.6
+@ipv9/tokentracker-cli@0.39.13
 ```
 
 Then restart the service.

@@ -58,7 +58,7 @@ tools:
   - name: tokentracker
     display_name: TokenTracker CLI
     package: "@ipv9/tokentracker-cli"
-    verified_version: "0.39.6"
+    verified_version: "0.39.13"
     npm_url: https://www.npmjs.com/package/@ipv9/tokentracker-cli
     repository: https://github.com/pitimon/TokenTracker
     binaries:
@@ -68,6 +68,11 @@ tools:
       - tokentracker-tracker
     node: ">=20"
     runbook: docs/runbooks/tools/tokentracker.md
+    service_models:
+      - Ubuntu/Linux systemd --user service
+      - macOS LaunchAgent
+      - Windows PowerShell Scheduled Task
+      - WSL systemd or Windows Scheduled Task wrapper
     dashboard_command:
       - npx --yes @ipv9/tokentracker-cli serve --sync --no-open --port 7680
     sync_command:

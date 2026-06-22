@@ -116,8 +116,17 @@ For claude-mem specifically:
 For TokenTracker specifically:
 
 - Use docs/runbooks/tools/tokentracker.md.
-- On Linux systemd user services, set both absolute `npx` in `ExecStart=` and `Environment=PATH=<node-dir>:/usr/local/bin:/usr/bin:/bin`, especially for NVM/Volta/asdf Node installs.
-- Verify `systemctl --user` state, dashboard HTTP 200, and `npx --yes @ipv9/tokentracker-cli@0.39.6 doctor --json`.
+- Verify upstream package metadata from `https://github.com/pitimon/TokenTracker`
+  or `npm view @ipv9/tokentracker-cli version bin engines --json` before
+  pinning a service.
+- For background service mode, choose the platform section in the runbook:
+  Ubuntu/Linux `systemd --user`, macOS LaunchAgent, Windows PowerShell
+  Scheduled Task, or WSL.
+- On Linux systemd user services, set both absolute `npx` in `ExecStart=` and
+  `Environment=PATH=<node-dir>:/usr/local/bin:/usr/bin:/bin`, especially for
+  NVM/Volta/asdf Node installs.
+- Verify service-manager state, dashboard HTTP 200, and
+  `npx --yes @ipv9/tokentracker-cli@0.39.13 doctor --json`.
 
 For RTK specifically:
 
