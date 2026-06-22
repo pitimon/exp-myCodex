@@ -294,7 +294,7 @@ $Settings = New-ScheduledTaskSettingsSet `
   -RestartCount 3 `
   -RestartInterval (New-TimeSpan -Minutes 1) `
   -AllowStartIfOnBatteries `
-  -DisallowStartIfOnBatteries:$false
+  -DontStopIfGoingOnBatteries
 
 Register-ScheduledTask `
   -TaskName 'TokenTracker Dashboard' `
