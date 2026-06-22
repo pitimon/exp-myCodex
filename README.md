@@ -27,6 +27,7 @@ installer. It is a public-safe operating kit for Codex users who want:
 - governance and ADR support through `claude-governance`
 - token/cost visibility through TokenTracker
 - compact command output through RTK
+- multi-agent handoff through the CHANGES.log Bridge Pattern
 - exact-version overlays when fast-moving plugins break Codex behavior
 - repeatable validation prompts for target machines
 
@@ -44,11 +45,17 @@ Then follow docs/prompts/codex-plugin-validation-prompt.md.
 ```
 
 That prompt is intentionally short. The validation prompt itself now tells the
-target Codex session to treat
-`https://github.com/pitimon/exp-myCodex/issues/5` as the live errata thread for
-`claude-mem` hook failures before it declares a new machine healthy. This keeps
-the first prompt stable while the operational details continue to change across
-Codex, `claude-mem`, Node, shell, and marketplace updates.
+target Codex session to read the live `claude-mem` errata threads before it
+declares a new machine healthy:
+
+```text
+https://github.com/pitimon/exp-myCodex/issues/5
+https://github.com/pitimon/exp-myCodex/issues/6
+https://github.com/pitimon/exp-myCodex/issues/8
+```
+
+This keeps the first prompt stable while the operational details continue to
+change across Codex, `claude-mem`, Node, shell, and marketplace updates.
 
 Expected outcome on a target workstation is not "the latest plugin installed."
 Expected outcome is a concise bootstrap report that proves the active runtime:
@@ -57,22 +64,22 @@ Expected outcome is a concise bootstrap report that proves the active runtime:
 - `claude-mem` worker health was matched to the current user
 - Codex plugin path, versioned cache, staging roots, and user-level hooks were
   inspected separately
-- any exact-version overlay or issue #5 workaround was applied only after the
+- any exact-version overlay or issue-documented workaround was applied only after the
   active version was identified
 - a real `codex exec` lifecycle smoke completed startup, prompt, tool, and stop
   hooks with no `Failed` entries
 
 For a human reading the repo, use this path:
 
-| Step | Read | Outcome |
-| --- | --- | --- |
-| 1 | `docs/README.md` | Understand the documentation map |
-| 2 | `docs/prompts/codex-plugin-validation-prompt.md` | Get the target-machine validation prompt |
-| 3 | `https://github.com/pitimon/exp-myCodex/issues/5` | Read the live `claude-mem` hook errata |
-| 4 | `docs/manifests/codex-plugins.yaml` | See recommended plugin selectors and versions |
-| 5 | `docs/manifests/codex-tools.yaml` | See adjacent CLI tools and smoke tests |
-| 6 | `docs/runbooks/plugins/claude-mem.md` | Validate the memory layer |
-| 7 | `docs/runbooks/claude-mem-scenario-tests.md` | Stress-test the runbook on a real machine |
+| Step | Read                                             | Outcome                                            |
+| ---- | ------------------------------------------------ | -------------------------------------------------- |
+| 1    | `docs/README.md`                                 | Understand the documentation map                   |
+| 2    | `docs/prompts/codex-plugin-validation-prompt.md` | Get the target-machine validation prompt           |
+| 3    | issues `#5`, `#6`, and `#8`                      | Read the live `claude-mem` hook and upgrade errata |
+| 4    | `docs/manifests/codex-plugins.yaml`              | See recommended plugin selectors and versions      |
+| 5    | `docs/manifests/codex-tools.yaml`                | See adjacent CLI tools and smoke tests             |
+| 6    | `docs/runbooks/plugins/claude-mem.md`            | Validate the memory layer                          |
+| 7    | `docs/runbooks/claude-mem-scenario-tests.md`     | Stress-test the runbook on a real machine          |
 
 ## System View
 
@@ -128,27 +135,28 @@ cache.
 
 Every runbook pushes the operator toward observable evidence:
 
-| Layer | Do Not Trust Alone | Verify Instead |
-| --- | --- | --- |
-| Codex plugins | repo files, release tags, old screenshots | `codex plugin list`, active plugin path, installed version |
-| MCP | plugin manifest only | `codex mcp list`, tool availability, smoke queries |
-| `claude-mem` worker | one healthy HTTP response | port, `workerPath`, process owner, `worker.pid`, settings |
-| `claude-mem` hooks | startup banner text | hook JSON shape, `SessionStart` payload probe, warm-up behavior |
-| Obsidian notes | raw capture files, transcript dumps | curated project note, source IDs, index link, no secrets |
-| Overlays | newest directory by timestamp | exact active plugin version and matching overlay directory |
-| TokenTracker/RTK | package install success | version output, service status, smoke tests |
+| Layer               | Do Not Trust Alone                        | Verify Instead                                                  |
+| ------------------- | ----------------------------------------- | --------------------------------------------------------------- |
+| Codex plugins       | repo files, release tags, old screenshots | `codex plugin list`, active plugin path, installed version      |
+| MCP                 | plugin manifest only                      | `codex mcp list`, tool availability, smoke queries              |
+| `claude-mem` worker | one healthy HTTP response                 | port, `workerPath`, process owner, `worker.pid`, settings       |
+| `claude-mem` hooks  | startup banner text                       | hook JSON shape, `SessionStart` payload probe, warm-up behavior |
+| Obsidian notes      | raw capture files, transcript dumps       | curated project note, source IDs, index link, no secrets        |
+| Overlays            | newest directory by timestamp             | exact active plugin version and matching overlay directory      |
+| TokenTracker/RTK    | package install success                   | version output, service status, smoke tests                     |
 
 ## Toolchain
 
-| Area | Component | Why It Is Here | Runbook |
-| --- | --- | --- | --- |
-| Memory | `claude-mem` | Reuse historical agent memory through Codex hooks and `mcp-search` | `docs/runbooks/plugins/claude-mem.md` |
-| Second brain | Obsidian | Store curated human-readable project notes without replacing `claude-mem` | `docs/runbooks/tools/obsidian.md` |
-| Workflow | `8-habit-ai-dev` | Keep AI-assisted engineering structured and reviewable | `docs/runbooks/plugins/8-habit-ai-dev.md` |
-| Governance | `claude-governance` | Add ADR, compliance, and engineering governance support | `docs/runbooks/plugins/claude-governance.md` |
-| Visibility | TokenTracker | Track token/cost usage and run a local dashboard/service | `docs/runbooks/tools/tokentracker.md` |
-| Efficiency | RTK | Reduce noisy command output before it reaches Codex context | `docs/runbooks/tools/rtk.md` |
-| Compatibility | `claude-mem` overlays | Patch known Codex compatibility breaks by exact plugin version | `overlays/` |
+| Area          | Component             | Why It Is Here                                                            | Runbook                                      |
+| ------------- | --------------------- | ------------------------------------------------------------------------- | -------------------------------------------- |
+| Memory        | `claude-mem`          | Reuse historical agent memory through Codex hooks and `mcp-search`        | `docs/runbooks/plugins/claude-mem.md`        |
+| Second brain  | Obsidian              | Store curated human-readable project notes without replacing `claude-mem` | `docs/runbooks/tools/obsidian.md`            |
+| Workflow      | `8-habit-ai-dev`      | Keep AI-assisted engineering structured and reviewable                    | `docs/runbooks/plugins/8-habit-ai-dev.md`    |
+| Governance    | `claude-governance`   | Add ADR, compliance, and engineering governance support                   | `docs/runbooks/plugins/claude-governance.md` |
+| Visibility    | TokenTracker          | Track token/cost usage and run a local dashboard/service                  | `docs/runbooks/tools/tokentracker.md`        |
+| Efficiency    | RTK                   | Reduce noisy command output before it reaches Codex context               | `docs/runbooks/tools/rtk.md`                 |
+| Handoff       | CHANGES.log Bridge    | Coordinate Claude Code and Codex through a local git-ignored scratchpad   | `docs/runbooks/tools/changes-log-bridge.md`  |
+| Compatibility | `claude-mem` overlays | Patch known Codex compatibility breaks by exact plugin version            | `overlays/`                                  |
 
 ## The `claude-mem` Pattern
 
@@ -163,28 +171,31 @@ The runbook checks:
 - foreign worker detection on shared hosts
 - `mcp-search` availability
 - unsupported `suppressOutput` hook regressions
-- exact-version overlay handling for `13.4.0`, `13.4.1`, `13.4.2`, and `13.6.2`
+- exact-version overlay handling for `13.4.0`, `13.4.1`, `13.4.2`, `13.6.2`, and `13.8.0`
 - scenario tests for read-only and state-changing validation
 
 When `claude-mem` releases a new version, this repo intentionally treats that as
 a new runtime contract. Do not apply an old overlay to a new cache just because
 the file names look familiar.
 
-Issue #5 is the living record for this failure class:
+Issues #5, #6, and #8 are the living records for this failure class:
 
 ```text
 https://github.com/pitimon/exp-myCodex/issues/5
+https://github.com/pitimon/exp-myCodex/issues/6
+https://github.com/pitimon/exp-myCodex/issues/8
 ```
 
-Use it for newly observed hook failures and version-specific workarounds. Keep
-the repo runbooks as the stable baseline, and add concise issue comments when a
-target machine reveals a new Codex or `claude-mem` runtime edge case.
+Use them for newly observed hook failures, schema/parser drift, and
+version-specific upgrade workarounds. Keep the repo runbooks as the stable
+baseline, and add concise issue comments when a target machine reveals a new
+Codex or `claude-mem` runtime edge case.
 
-The current verified Codex baseline is `claude-mem` `13.6.2` with the local
-overlay under `overlays/claude-mem/13.6.2/`. That overlay records the
-workstation fix for Codex 0.140 rejecting `hooks/codex-hooks.json` when the
-manifest contains unsupported top-level keys, plus the marketplace-refresh drift
-that can remove `.install-version` and `scripts/codex-hook-output-filter.js`.
+The current verified Codex baseline is `claude-mem` `13.8.0` with the local
+overlay under `overlays/claude-mem/13.8.0/`. The older 13.6.2 overlay remains
+available for exact-version legacy workstations. Both overlays record the same
+core rule: patch only the matching active version, inspect every live-resolvable
+root, and finish with real Codex lifecycle smokes.
 
 ## The Obsidian Pattern
 
@@ -227,6 +238,7 @@ docs/
       claude-mem.md
       template.md
     tools/
+      changes-log-bridge.md
       obsidian.md
       rtk.md
       tokentracker.md
@@ -236,6 +248,7 @@ overlays/
     13.4.1/
     13.4.2/
     13.6.2/
+    13.8.0/
 scripts/
   claude-mem-codex-compat.cjs
 ```

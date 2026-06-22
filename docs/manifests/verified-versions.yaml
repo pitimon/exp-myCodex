@@ -1,18 +1,18 @@
 # Versions last captured from the source workstation runbook set.
 # Re-check on the target workstation after install/update.
 
-verified_at: "2026-06-18"
+verified_at: "2026-06-22"
 plugins:
   claude-mem:
     selector: claude-mem@claude-mem-local
-    version: "13.6.2"
-    ref: v13.6.2
+    version: "13.8.0"
+    ref: v13.8.0
     notes:
-      - Codex overlay available under overlays/claude-mem/13.6.2/
-      - Version 13.6.2 overlay removes the Codex-rejected top-level hooks description field, restores .install-version, restores scripts/codex-hook-output-filter.js, and pins hook resolver order to 13.6.2 Codex/local roots before older Claude cache fallbacks.
-      - claude-mem is pinned to a patched local v13.6.2 snapshot on the source workstation; apply overlays only when the active cache version exactly matches the overlay directory.
-      - Issue #5 remains the living field-observation thread for marketplace refresh drift, user-level hooks, missing marker/filter files, and lifecycle smoke failures.
-      - Historical overlays remain available for exact 13.4.x runtimes, but must not be copied forward.
+      - Codex overlay available under overlays/claude-mem/13.8.0/
+      - Version 13.8.0 overlay removes Codex-rejected hook metadata, restores .install-version, restores scripts/codex-hook-output-filter.js, filters duplicate SessionStart context, and pins hook resolver order to 13.8.0 Codex/local roots before older Claude cache fallbacks.
+      - claude-mem is pinned to a patched local v13.8.0 snapshot on the source workstation; apply overlays only when the active cache version exactly matches the overlay directory.
+      - Issues #5, #6, and #8 remain the living field-observation threads for marketplace refresh drift, schema drift, user-level hooks, missing marker/filter files, upgrade gaps, and lifecycle smoke failures.
+      - Historical overlays remain available for exact 13.4.x and 13.6.2 runtimes, but must not be copied forward.
       - Run post-install verification and fresh startup/tool-triggering codex exec smokes before calling healthy.
 
   8-habit-ai-dev:
@@ -31,6 +31,16 @@ plugins:
       - v3.4.1 release is public and fixes Linux Claude Code install compatibility.
 
 tools:
+  changes-log-bridge:
+    package: workflow-only
+    version: "2026-06-22"
+    runbook: docs/runbooks/tools/changes-log-bridge.md
+    notes:
+      - Documents the userspace Bridge Protocol for ~/.claude/CLAUDE.md and ~/.codex/AGENTS.md.
+      - Codex fallback requires top-level project_doc_fallback_filenames = ["CLAUDE.md"] in ~/.codex/config.toml.
+      - CHANGES.log should be ignored through the configured global git excludesfile.
+      - End-to-end proof is CC appending, Codex reading, then Codex appending without overwriting.
+
   obsidian:
     package: obsidian
     version: workflow-only

@@ -37,6 +37,7 @@ For non-plugin tooling, read:
 
 ```text
 docs/runbooks/tools/obsidian.md
+docs/runbooks/tools/changes-log-bridge.md
 docs/runbooks/tools/rtk.md
 docs/runbooks/tools/tokentracker.md
 ```

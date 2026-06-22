@@ -4,6 +4,20 @@
 # useful around Codex but are not installed through `codex plugin`.
 
 tools:
+  - name: changes-log-bridge
+    display_name: CHANGES.log Bridge Pattern
+    package_manager:
+      - userspace config
+      - git global excludesfile
+    package: workflow-only
+    verified_version: "2026-06-22"
+    credit: Dheeraj Sharma & Wyndo, The AI Maker
+    runbook: docs/runbooks/tools/changes-log-bridge.md
+    smoke_tests:
+      - python3 -c "import tomllib,pathlib; d=tomllib.load(open(pathlib.Path.home()/'.codex/config.toml','rb')); print(d.get('project_doc_fallback_filenames'))"
+      - git check-ignore CHANGES.log
+      - compare ~/.claude/CLAUDE.md and ~/.codex/AGENTS.md bridge sections
+
   - name: obsidian
     display_name: Obsidian second-brain workflow
     package_manager:

@@ -68,13 +68,13 @@ historical unless an old session or old cache is being debugged.
 
 ## Current Verified State
 
-Verified on 2026-06-18:
+Verified on 2026-06-22:
 
 ```text
 worker health endpoint: http://127.0.0.1:37701/api/health
 worker status: ok
-worker runtime version: 13.6.2
-Codex plugin versions verified: 13.4.0, 13.4.1, 13.4.2, 13.6.2
+worker runtime version: 13.8.0
+Codex plugin versions verified: 13.4.0, 13.4.1, 13.4.2, 13.6.2, 13.8.0
 worker path: a current-user claude-mem worker-service.cjs path
 worker provider: claude
 worker auth: Claude Code OAuth token read from system keychain at spawn
@@ -120,11 +120,13 @@ no-op warm-up alone as proof that substantive work cannot be stored.
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.1/
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.4.2/
 ~/.codex/plugins/cache/claude-mem-local/claude-mem/13.6.2/
+~/.codex/plugins/cache/claude-mem-local/claude-mem/13.8.0/
 ~/.codex/local-marketplaces/claude-mem-local/plugin/
 overlays/claude-mem/13.4.0/
 overlays/claude-mem/13.4.1/
 overlays/claude-mem/13.4.2/
 overlays/claude-mem/13.6.2/
+overlays/claude-mem/13.8.0/
 ```
 
 ## Startup Behavior
@@ -177,25 +179,27 @@ version as a new runtime contract until verified. The goal is not to pin users
 forever; it is to avoid silently applying stale hook patches to a changed
 bundle.
 
-The source workstation pins the Codex marketplace to `v13.6.2` plus the local
+The source workstation currently uses `claude-mem` `13.8.0` plus the local
 overlay until upstream publishes an equivalent Codex-compatible bundle:
 
 ```toml
 [marketplaces.claude-mem-local]
 source = "https://github.com/thedotmack/claude-mem.git"
-ref = "v13.6.2"
+ref = "v13.8.0"
 ```
 
-### Live Errata: Issue #5
+### Live Errata: Issues #5, #6, and #8
 
-The public living thread for recurring Codex `claude-mem` hook failures is:
+The public living threads for recurring Codex `claude-mem` hook failures are:
 
 ```text
 https://github.com/pitimon/exp-myCodex/issues/5
+https://github.com/pitimon/exp-myCodex/issues/6
+https://github.com/pitimon/exp-myCodex/issues/8
 ```
 
 Read the latest relevant comments before applying a workaround on a target
-machine. Use the runbook as the stable baseline and issue #5 as the place to
+machine. Use the runbook as the stable baseline and the issues as the place to
 record version-specific or machine-specific drift.
 
 Known recurring patterns from issue #5:
@@ -220,24 +224,25 @@ Known recurring patterns from issue #5:
 - A warm-up-only prompt validates startup behavior, but it does not validate
   `PreToolUse` or `PostToolUse`.
 
-Latest observed 2026-06-18 recurrence:
+Latest observed 2026-06-22 recurrence:
 
 ```text
-claude-mem 13.6.2 upstream still shipped plugin/hooks/codex-hooks.json with a
-top-level description field, which Codex 0.140 rejects. Marketplace refreshes
-also overwrote the local .install-version / codex-hook-output-filter.js patch,
-and old hook resolver order could restart or probe a 13.6.1 Claude cache after
-codex plugin list reported 13.6.2.
+claude-mem 13.8.0 connected to Codex only after the same compatibility class was
+applied across all live roots: remove unsupported hook manifest metadata,
+restore .install-version and scripts/codex-hook-output-filter.js, filter
+SessionStart context output, make version/startup hooks return Codex-safe JSON,
+keep PreToolUse fail-open, and verify mcp-search plus fresh lifecycle smokes.
 ```
 
-The verified local fix is `overlays/claude-mem/13.6.2/`: remove unsupported
-hook-manifest top-level keys, restore the install marker and Codex hook output
-filter, and prefer 13.6.2 Codex/local roots before older Claude fallbacks.
+The verified local fix is `overlays/claude-mem/13.8.0/` for current
+workstations. `overlays/claude-mem/13.6.2/` remains valid only for exact 13.6.2
+legacy runtimes. Do not copy an older overlay forward.
 
 When a new version has no exact overlay in this repo, do not copy an older
 overlay forward. Enter discovery mode, collect the facts above, and add a
-concise issue #5 comment if the machine reveals a new failure mode or a reusable
-workaround.
+concise issue comment if the machine reveals a new failure mode or a reusable
+workaround. Use #5 for the broad hook failure class, #6 for hook schema/parser
+or duplicate-surface findings, and #8 for 13.8.x upgrade or packaging gaps.
 
 Preferred workflow from this repo:
 
@@ -270,9 +275,10 @@ Version handling rules:
 - Apply an overlay only when `overlays/claude-mem/<version>/` exists and the
   active plugin reports the same version.
 - Do not apply a `13.4.0` overlay to `13.4.1`, a `13.4.2` overlay to `13.6.2`,
-  or any overlay to a newer version unless the maintainer has reviewed that
-  exact bundle and updated this repo. Use `overlays/claude-mem/13.6.2/` only
-  with active plugin version `13.6.2`.
+  a `13.6.2` overlay to `13.8.0`, or any overlay to a newer version unless the
+  maintainer has reviewed that exact bundle and updated this repo. Use
+  `overlays/claude-mem/<version>/` only with the matching active plugin
+  version.
 - If the active version has no overlay, run read-only verification first and
   report `overlay=missing_for_version:<version>`.
 - A missing overlay is not automatically unhealthy. It means the workstation is
@@ -534,7 +540,7 @@ plugin installed.
 1. Add or refresh the marketplace.
 
 ```bash
-codex plugin marketplace add thedotmack/claude-mem --ref v13.6.2
+codex plugin marketplace add thedotmack/claude-mem --ref v13.8.0
 codex plugin marketplace list
 ```
 
@@ -571,11 +577,12 @@ jq -r '.version' "$PLUGIN/.codex-plugin/plugin.json"
 Expected local versions for this runbook:
 
 ```text
-13.4.0
-13.4.1
-13.4.2
-13.6.2
+13.8.0
 ```
+
+Legacy exact-version overlays remain available for `13.4.0`, `13.4.1`,
+`13.4.2`, and `13.6.2`. Use them only when the active target machine reports
+that exact version.
 
 4. Verify the worker and MCP path with the `Runtime Verification` section.
 
@@ -635,7 +642,7 @@ codex plugin add claude-mem@claude-mem-local
 ```
 
 4. If the version or active plugin path remains stale, remove and add the
-plugin.
+   plugin.
 
 Use this only after the backup above:
 
@@ -708,14 +715,15 @@ done
 rsync -a "$PATCH_ROOT"/ "$PLUGIN"/
 ```
 
-For `13.6.2`, also patch every live-resolvable plugin root if it is present,
+For `13.6.2` and newer reviewed overlays, also patch every live-resolvable
+plugin root if it is present,
 because Codex hook resolution can fall back to local marketplace and
 Claude-side plugin trees:
 
 ```bash
 LOCAL_MARKET="$HOME/.codex/local-marketplaces/claude-mem-local/plugin"
 MARKET="$HOME/.codex/.tmp/marketplaces/claude-mem-local/plugin"
-CLAUDE_CACHE="$HOME/.claude/plugins/cache/thedotmack/claude-mem/13.6.2"
+CLAUDE_CACHE="$HOME/.claude/plugins/cache/thedotmack/claude-mem/$VERSION"
 CLAUDE_MARKET="$HOME/.claude/plugins/marketplaces/thedotmack/plugin"
 test -d "$LOCAL_MARKET" && rsync -a "$PATCH_ROOT"/ "$LOCAL_MARKET"/
 test -d "$MARKET" && rsync -a "$PATCH_ROOT"/ "$MARKET"/
@@ -724,7 +732,7 @@ test -d "$CLAUDE_MARKET" && rsync -a "$PATCH_ROOT"/ "$CLAUDE_MARKET"/
 ```
 
 For older exact-version overlays, follow their overlay README and do not copy
-the 13.6.2 hook resolver back to 13.4.x without review.
+a newer hook resolver back to an older exact-version runtime without review.
 
 For `13.4.0`, after applying the overlay, make the `PostToolUse` hook target
 the current machine's active plugin root:
@@ -907,7 +915,7 @@ Do not call the setup healthy until a real lifecycle run exercises
 are useful diagnostics, but Codex lifecycle output is the acceptance gate.
 
 10. If Codex still prints `claude-mem: runtime not yet set up`, verify the
-active Codex plugin install marker, not only the Claude Code cache:
+    active Codex plugin install marker, not only the Claude Code cache:
 
 ```bash
 PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
@@ -933,8 +941,8 @@ node "$PLUGIN/scripts/version-check.js"
 ```
 
 11. Validate recent-context injection with a real Codex-shaped `SessionStart`
-payload. A direct hook probe with `{}` is not sufficient because the adapter
-needs a session id, event name, cwd, and source.
+    payload. A direct hook probe with `{}` is not sufficient because the adapter
+    needs a session id, event name, cwd, and source.
 
 ```bash
 PLUGIN=$(node scripts/claude-mem-codex-compat.cjs inspect --json | jq -r '.activePlugin')
@@ -1071,10 +1079,11 @@ PostToolUse
 Stop
 ```
 
-The active `13.6.2` Codex hooks use `scripts/codex-hook-output-filter.js` to
-strip legacy top-level `suppressOutput` fields from hook JSON before Codex sees
-them. Its `hooks/codex-hooks.json` must also have only one top-level key,
-`hooks`; a top-level `description` key is a parse-time failure in Codex 0.140.
+The active `13.6.2` and `13.8.0` Codex hooks use
+`scripts/codex-hook-output-filter.js` to strip legacy top-level `suppressOutput`
+fields from hook JSON before Codex sees them. Their `hooks/codex-hooks.json`
+files must also have only one top-level key, `hooks`; a top-level `description`
+key is a parse-time failure in Codex 0.140.
 
 The older `13.4.0` balanced overlay used an async spool helper:
 
@@ -1146,6 +1155,15 @@ Current 2026-06-18 active `13.6.2` overlay checksums:
 hooks/codex-hooks.json          e0bbceee7f1d85a2ab3fd6974e9f9f3b08e4672fe738b55656382523e5f8a272
 scripts/codex-hook-output-filter.js f43442908362f50efc744e489f4f6e98e5899e8e87c4eb367273b5b78d4dea60
 README.md                       7cd5a7abb4fa8e844b99fec9b89a870dad95845484bbb021b469348363de471f
+```
+
+Current 2026-06-22 active `13.8.0` overlay checksums:
+
+```text
+.install-version                62f0729492dda06ccd9fc56a35445d9b9ea207ce003f9576a67a1e2172d883cf
+hooks/codex-hooks.json          92ee223cf4ecdce8108858c5547a8526fc9cda19495a187dd0b95ba70e56ba20
+scripts/codex-hook-output-filter.js f43442908362f50efc744e489f4f6e98e5899e8e87c4eb367273b5b78d4dea60
+README.md                       153ed58d2763a3c9d56158a45c78564851e7eb19f38c2f3009ff1e8d65ce4d8e
 ```
 
 Syntax and hook checks:

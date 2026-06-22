@@ -9,24 +9,30 @@ plugins:
     marketplace: claude-mem-local
     selector: claude-mem@claude-mem-local
     source: thedotmack/claude-mem
-    verified_version: "13.6.2"
-    ref: v13.6.2
+    verified_version: "13.8.0"
+    ref: v13.8.0
     runbook: docs/runbooks/plugins/claude-mem.md
-    live_errata: https://github.com/pitimon/exp-myCodex/issues/5
-    overlay: overlays/claude-mem/13.6.2/
+    live_errata:
+      - https://github.com/pitimon/exp-myCodex/issues/5
+      - https://github.com/pitimon/exp-myCodex/issues/6
+      - https://github.com/pitimon/exp-myCodex/issues/8
+    overlay: overlays/claude-mem/13.8.0/
     overlay_policy: exact-version-only
     update_behavior: pinned-local-overlay
     latest_field_observation:
-      version: "13.6.2"
+      version: "13.8.0"
       status: verified-local-overlay
       notes:
-        - Upstream v13.6.2 still ships plugin/hooks/codex-hooks.json with a top-level description field that Codex 0.140 rejects.
+        - Upstream v13.8.0 still needed Codex compatibility fixes on the source workstation before Codex could load cleanly.
+        - Remove unsupported top-level hook manifest metadata such as description from hooks/codex-hooks.json.
         - Inspect ~/.codex/hooks.json as well as plugin-owned hooks/codex-hooks.json.
         - Treat missing .install-version and missing scripts/codex-hook-output-filter.js as common drift after marketplace refresh.
-        - Keep hook resolvers pointed at 13.6.2 Codex/local roots before older Claude cache fallbacks.
+        - Keep hook resolvers pointed at 13.8.0 Codex/local roots before older Claude cache fallbacks.
+        - Keep PreToolUse fail-open/non-blocking and verify PostToolUse observation capture separately.
+        - Verify mcp-search availability, worker health, context injection, direct hook smokes, and fresh lifecycle smokes.
         - Final acceptance requires a codex exec lifecycle smoke that triggers PreToolUse and PostToolUse.
     codex_install:
-      - codex plugin marketplace add thedotmack/claude-mem --ref v13.6.2
+      - codex plugin marketplace add thedotmack/claude-mem --ref v13.8.0
       - codex plugin add claude-mem@claude-mem-local
     codex_update:
       - codex plugin marketplace upgrade claude-mem-local

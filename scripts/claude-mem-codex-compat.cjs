@@ -8,19 +8,68 @@ const childProcess = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "..");
 const home = os.homedir();
-const cacheRoot = path.join(home, ".codex", "plugins", "cache", "claude-mem-local", "claude-mem");
-const localMarketplaceRoot = path.join(home, ".codex", "local-marketplaces", "claude-mem-local", "plugin");
-const marketplaceRoot = path.join(home, ".codex", ".tmp", "marketplaces", "claude-mem-local", "plugin");
-const codexMarketplaceStagingRoot = path.join(home, ".codex", ".tmp", "marketplaces", ".staging");
-const claudeCacheRoot = path.join(home, ".claude", "plugins", "cache", "thedotmack", "claude-mem");
-const claudeMarketplaceRoot = path.join(home, ".claude", "plugins", "marketplaces", "thedotmack", "plugin");
+const cacheRoot = path.join(
+  home,
+  ".codex",
+  "plugins",
+  "cache",
+  "claude-mem-local",
+  "claude-mem",
+);
+const localMarketplaceRoot = path.join(
+  home,
+  ".codex",
+  "local-marketplaces",
+  "claude-mem-local",
+  "plugin",
+);
+const marketplaceRoot = path.join(
+  home,
+  ".codex",
+  ".tmp",
+  "marketplaces",
+  "claude-mem-local",
+  "plugin",
+);
+const codexMarketplaceStagingRoot = path.join(
+  home,
+  ".codex",
+  ".tmp",
+  "marketplaces",
+  ".staging",
+);
+const claudeCacheRoot = path.join(
+  home,
+  ".claude",
+  "plugins",
+  "cache",
+  "thedotmack",
+  "claude-mem",
+);
+const claudeMarketplaceRoot = path.join(
+  home,
+  ".claude",
+  "plugins",
+  "marketplaces",
+  "thedotmack",
+  "plugin",
+);
 const codexUserHooksFile = path.join(home, ".codex", "hooks.json");
-const requiredHookEvents = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
-const suppressPattern = /suppressOutput:!0|suppressOutput:true|"suppressOutput"\s*:\s*true/;
+const requiredHookEvents = [
+  "SessionStart",
+  "UserPromptSubmit",
+  "PreToolUse",
+  "PostToolUse",
+  "Stop",
+];
+const suppressPattern =
+  /suppressOutput:!0|suppressOutput:true|"suppressOutput"\s*:\s*true/;
 const allowedCodexHookTopLevelKeys = new Set(["hooks"]);
 
 function usage(exitCode = 2) {
-  console.error("Usage: node scripts/claude-mem-codex-compat.cjs inspect|apply|verify [--json]");
+  console.error(
+    "Usage: node scripts/claude-mem-codex-compat.cjs inspect|apply|verify [--json]",
+  );
   process.exit(exitCode);
 }
 
@@ -86,10 +135,14 @@ function findVersionedCodexCache(version) {
 }
 
 function findLatestCodexCache() {
-  const dirs = listDirs(cacheRoot).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  const dirs = listDirs(cacheRoot).sort(
+    (a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs,
+  );
   const plugin = dirs.find(isPluginRoot);
   if (!plugin) {
-    throw new Error(`active claude-mem Codex cache not found under ${cacheRoot}`);
+    throw new Error(
+      `active claude-mem Codex cache not found under ${cacheRoot}`,
+    );
   }
   return plugin;
 }
@@ -162,7 +215,10 @@ function walk(dir, prefix = "") {
 
 function sha256(file) {
   const crypto = require("crypto");
-  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+  return crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(file))
+    .digest("hex");
 }
 
 function parseSkillDescriptions(plugin) {
@@ -171,7 +227,9 @@ function parseSkillDescriptions(plugin) {
   const descriptions = [];
   if (!fs.existsSync(skillsDir)) return { descriptions, issues };
 
-  for (const skill of walk(skillsDir).filter((rel) => rel.endsWith("SKILL.md"))) {
+  for (const skill of walk(skillsDir).filter((rel) =>
+    rel.endsWith("SKILL.md"),
+  )) {
     const file = path.join(skillsDir, skill);
     const text = fs.readFileSync(file, "utf8");
     const match = text.match(/^---\n([\s\S]*?)\n---\n/);
@@ -179,7 +237,9 @@ function parseSkillDescriptions(plugin) {
 
     const frontmatter = match[1];
     const oneLine = frontmatter.match(/^description:\s*(.+)$/m);
-    const block = frontmatter.match(/^description:\s*\|\s*\n((?:[ \t]+.*\n?)*)/m);
+    const block = frontmatter.match(
+      /^description:\s*\|\s*\n((?:[ \t]+.*\n?)*)/m,
+    );
     const value = block
       ? block[1]
           .split(/\r?\n/)
@@ -205,7 +265,8 @@ function collectHookCommands(parsed) {
     groups.forEach((group, groupIndex) => {
       const hooks = Array.isArray(group.hooks) ? group.hooks : [];
       hooks.forEach((hook, hookIndex) => {
-        if (hook?.type !== "command" || typeof hook.command !== "string") return;
+        if (hook?.type !== "command" || typeof hook.command !== "string")
+          return;
         out.push({
           event,
           groupIndex,
@@ -214,7 +275,9 @@ function collectHookCommands(parsed) {
           command: hook.command,
           usesFilter: hook.command.includes("codex-hook-output-filter.js"),
           usesVersionCheck: hook.command.includes("version-check.js"),
-          printsContinue: hook.command.includes("{\"continue\":true}") || hook.command.includes('{"continue":true}'),
+          printsContinue:
+            hook.command.includes('{"continue":true}') ||
+            hook.command.includes('{"continue":true}'),
         });
       });
     });
@@ -228,18 +291,24 @@ function inspectHookFile(file) {
   const parsed = readJson(file);
   const commands = collectHookCommands(parsed);
   const topLevelKeys = Object.keys(parsed);
-  const unsupportedTopLevelKeys = topLevelKeys.filter((key) => !allowedCodexHookTopLevelKeys.has(key));
+  const unsupportedTopLevelKeys = topLevelKeys.filter(
+    (key) => !allowedCodexHookTopLevelKeys.has(key),
+  );
   return {
     exists: true,
     sha256: sha256(file),
     topLevelKeys,
     unsupportedTopLevelKeys,
     events: Object.keys(parsed.hooks || {}),
-    hasRequiredEvents: requiredHookEvents.every((event) => Boolean(parsed.hooks?.[event])),
+    hasRequiredEvents: requiredHookEvents.every((event) =>
+      Boolean(parsed.hooks?.[event]),
+    ),
     hasUnsupportedSuppressOutput: suppressPattern.test(text),
     commands,
     filterCommandCount: commands.filter((command) => command.usesFilter).length,
-    versionCheckCommandCount: commands.filter((command) => command.usesVersionCheck).length,
+    versionCheckCommandCount: commands.filter(
+      (command) => command.usesVersionCheck,
+    ).length,
   };
 }
 
@@ -296,7 +365,11 @@ function applyOverlay() {
   }
 
   const files = walk(state.overlay);
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-");
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\..+/, "")
+    .replace("T", "-");
   for (const target of state.targetRoots) {
     for (const rel of files) backupExisting(target.path, rel, stamp);
     fs.cpSync(state.overlay, target.path, { recursive: true });
@@ -308,7 +381,8 @@ function verify() {
   const state = inspect();
   const errors = [];
   const warnings = [];
-  if (!state.installMarkerExists) errors.push("missing .install-version in active Codex cache");
+  if (!state.installMarkerExists)
+    errors.push("missing .install-version in active Codex cache");
   for (const target of state.targetRoots) {
     for (const rel of ["hooks/codex-hooks.json", "hooks/hooks.json"]) {
       const file = path.join(target.path, rel);
@@ -319,40 +393,76 @@ function verify() {
       const text = fs.readFileSync(file, "utf8");
       const parsed = readJson(file);
       const events = Object.keys(parsed.hooks || {});
-      if (rel === "hooks/codex-hooks.json" && !requiredHookEvents.every((event) => Boolean(parsed.hooks?.[event]))) {
+      if (
+        rel === "hooks/codex-hooks.json" &&
+        !requiredHookEvents.every((event) => Boolean(parsed.hooks?.[event]))
+      ) {
         errors.push(`${target.kind}:${rel} missing required hook events`);
       }
       if (rel === "hooks/codex-hooks.json") {
-        const unsupportedTopLevelKeys = Object.keys(parsed).filter((key) => !allowedCodexHookTopLevelKeys.has(key));
+        const unsupportedTopLevelKeys = Object.keys(parsed).filter(
+          (key) => !allowedCodexHookTopLevelKeys.has(key),
+        );
         if (unsupportedTopLevelKeys.length > 0) {
-          errors.push(`${target.kind}:${rel} has unsupported top-level keys: ${unsupportedTopLevelKeys.join(",")}`);
+          errors.push(
+            `${target.kind}:${rel} has unsupported top-level keys: ${unsupportedTopLevelKeys.join(",")}`,
+          );
         }
       }
-      if (suppressPattern.test(text)) errors.push(`${target.kind}:${rel} contains unsupported suppressOutput`);
+      if (suppressPattern.test(text))
+        errors.push(
+          `${target.kind}:${rel} contains unsupported suppressOutput`,
+        );
       if (rel === "hooks/codex-hooks.json" && !events.includes("PreToolUse")) {
         errors.push(`${target.kind}:${rel} missing PreToolUse`);
       }
+      if (rel === "hooks/codex-hooks.json") {
+        const unfilteredCodexHooks = collectHookCommands(parsed).filter(
+          (command) =>
+            command.command.includes('worker-service.cjs" hook codex') &&
+            !command.command.includes("codex-hook-output-filter.js"),
+        );
+        for (const command of unfilteredCodexHooks) {
+          errors.push(
+            `${target.kind}:${rel} ${command.event}[${command.groupIndex}:${command.hookIndex}] does not pipe through codex-hook-output-filter.js`,
+          );
+        }
+      }
     }
-    if (!fs.existsSync(path.join(target.path, "scripts", "codex-hook-output-filter.js"))) {
+    if (
+      !fs.existsSync(
+        path.join(target.path, "scripts", "codex-hook-output-filter.js"),
+      )
+    ) {
       errors.push(`${target.kind}:scripts/codex-hook-output-filter.js missing`);
     }
   }
   for (const issue of state.skillDescriptionIssues) {
-    errors.push(`${issue.file} description exceeds ${issue.max} chars (${issue.chars})`);
+    errors.push(
+      `${issue.file} description exceeds ${issue.max} chars (${issue.chars})`,
+    );
   }
   if (state.userHookState.exists) {
     if (state.userHookState.hasUnsupportedSuppressOutput) {
-      errors.push("user-hooks:~/.codex/hooks.json contains unsupported suppressOutput");
+      errors.push(
+        "user-hooks:~/.codex/hooks.json contains unsupported suppressOutput",
+      );
     }
     if (state.userHookState.filterCommandCount > 0 && !state.filterExists) {
-      errors.push("user-hooks:commands reference codex-hook-output-filter.js but active plugin filter is missing");
+      errors.push(
+        "user-hooks:commands reference codex-hook-output-filter.js but active plugin filter is missing",
+      );
     }
-    const userVersionChecks = state.userHookState.commands.filter((command) => command.usesVersionCheck);
-    const pluginVersionChecks = (state.hookState["hooks/codex-hooks.json"].commands || []).filter((command) =>
-      command.usesVersionCheck
+    const userVersionChecks = state.userHookState.commands.filter(
+      (command) => command.usesVersionCheck,
     );
+    const pluginVersionChecks = (
+      state.hookState["hooks/codex-hooks.json"].commands || []
+    ).filter((command) => command.usesVersionCheck);
     if (userVersionChecks.length > 0 && pluginVersionChecks.length > 0) {
-      const pluginWithoutJson = pluginVersionChecks.filter((command) => !command.printsContinue);
+      const pluginWithoutJson = pluginVersionChecks.filter(
+        (command) => !command.printsContinue,
+      );
       if (pluginWithoutJson.length > 0) {
         warnings.push(
           "SessionStart has user-level and plugin-owned version-check hooks; verify plugin-owned checks return JSON and not empty stdout",
@@ -361,7 +471,7 @@ function verify() {
     }
   }
   const hookSmokes = [];
-  function assertNoSuppressOutput(stdout, label) {
+  function assertNoSuppressOutput(stdout, label, options = {}) {
     const lines = stdout
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -373,7 +483,21 @@ function verify() {
     try {
       const parsed = JSON.parse(lines[0]);
       if (parsed.suppressOutput) errors.push(`${label} emitted suppressOutput`);
-      if (parsed.continue !== true) errors.push(`${label} did not return continue=true`);
+      const hasHookContext = Boolean(
+        parsed.hookSpecificOutput?.additionalContext,
+      );
+      if (options.requireContinue !== false && parsed.continue !== true) {
+        errors.push(`${label} did not return continue=true`);
+      }
+      if (
+        options.allowHookSpecificOutput &&
+        parsed.continue !== true &&
+        !hasHookContext
+      ) {
+        errors.push(
+          `${label} returned neither continue=true nor hookSpecificOutput.additionalContext`,
+        );
+      }
       return parsed;
     } catch {
       errors.push(`${label} emitted invalid JSON`);
@@ -382,23 +506,53 @@ function verify() {
   }
 
   if (state.filterExists) {
-    const filter = path.join(state.activePlugin, "scripts", "codex-hook-output-filter.js");
-    const child = childProcess.spawnSync(process.execPath, [filter, "--event", "PostToolUse"], {
-      input: "{\"continue\":true,\"suppressOutput\":true}\n",
-      encoding: "utf8",
-    });
-    if (child.status !== 0) errors.push("codex-hook-output-filter.js exited non-zero");
+    const filter = path.join(
+      state.activePlugin,
+      "scripts",
+      "codex-hook-output-filter.js",
+    );
+    const child = childProcess.spawnSync(
+      process.execPath,
+      [filter, "--event", "PostToolUse"],
+      {
+        input: '{"continue":true,"suppressOutput":true}\n',
+        encoding: "utf8",
+      },
+    );
+    if (child.status !== 0)
+      errors.push("codex-hook-output-filter.js exited non-zero");
     else {
-      const parsed = assertNoSuppressOutput(child.stdout, "codex-hook-output-filter.js");
-      if (parsed) hookSmokes.push({ event: "filter", ok: true, keys: Object.keys(parsed) });
+      const parsed = assertNoSuppressOutput(
+        child.stdout,
+        "codex-hook-output-filter.js",
+      );
+      if (parsed)
+        hookSmokes.push({
+          event: "filter",
+          ok: true,
+          keys: Object.keys(parsed),
+        });
     }
   }
 
   const runner = path.join(state.activePlugin, "scripts", "bun-runner.js");
   const worker = path.join(state.activePlugin, "scripts", "worker-service.cjs");
-  const filter = path.join(state.activePlugin, "scripts", "codex-hook-output-filter.js");
+  const filter = path.join(
+    state.activePlugin,
+    "scripts",
+    "codex-hook-output-filter.js",
+  );
   if (fs.existsSync(runner) && fs.existsSync(worker) && fs.existsSync(filter)) {
     const smokePayloads = [
+      {
+        event: "context",
+        payload: {
+          session_id: "codex-compat-verify",
+          hook_event_name: "SessionStart",
+          cwd: repoRoot,
+          transcript_path: "/tmp/codex-compat-verify.jsonl",
+        },
+      },
       {
         event: "file-context",
         payload: {
@@ -437,16 +591,44 @@ function verify() {
         errors.push(`hook ${smoke.event} exited non-zero`);
         continue;
       }
-      const filtered = childProcess.spawnSync(process.execPath, [filter, "--event", smoke.event], {
-        input: child.stdout,
-        encoding: "utf8",
-      });
+      const filtered = childProcess.spawnSync(
+        process.execPath,
+        [filter, "--event", smoke.event],
+        {
+          input: child.stdout,
+          encoding: "utf8",
+        },
+      );
       if (filtered.status !== 0) {
         errors.push(`hook ${smoke.event} filter exited non-zero`);
         continue;
       }
-      const parsed = assertNoSuppressOutput(filtered.stdout, `hook ${smoke.event}`);
-      if (parsed) hookSmokes.push({ event: smoke.event, ok: true, keys: Object.keys(parsed) });
+      const parsed = assertNoSuppressOutput(
+        filtered.stdout,
+        `hook ${smoke.event}`,
+        {
+          requireContinue: !["context", "file-context"].includes(smoke.event),
+          allowHookSpecificOutput: ["context", "file-context"].includes(
+            smoke.event,
+          ),
+        },
+      );
+      if (parsed && ["context", "file-context"].includes(smoke.event)) {
+        if (Object.prototype.hasOwnProperty.call(parsed, "systemMessage")) {
+          errors.push(`hook ${smoke.event} emitted top-level systemMessage`);
+        }
+        if (!parsed.hookSpecificOutput?.additionalContext) {
+          errors.push(
+            `hook ${smoke.event} did not emit hookSpecificOutput.additionalContext`,
+          );
+        }
+      }
+      if (parsed)
+        hookSmokes.push({
+          event: smoke.event,
+          ok: true,
+          keys: Object.keys(parsed),
+        });
     }
   }
 

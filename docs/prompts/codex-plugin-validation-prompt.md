@@ -15,8 +15,10 @@ Then read:
 1. docs/README.md
 2. docs/manifests/codex-plugins.yaml
 3. the relevant per-plugin runbook under docs/runbooks/plugins/
-4. for claude-mem, the latest comments in
-   https://github.com/pitimon/exp-myCodex/issues/5
+4. for claude-mem, the latest comments in these live errata threads:
+   - https://github.com/pitimon/exp-myCodex/issues/5
+   - https://github.com/pitimon/exp-myCodex/issues/6
+   - https://github.com/pitimon/exp-myCodex/issues/8
 
 Goal:
 Bootstrap, update, or validate the requested Codex plugin(s) using the public
@@ -26,13 +28,14 @@ Default scope:
 
 - If the user does not specify plugins, validate the Codex workstation baseline:
   claude-mem, 8-habit-ai-dev, claude-governance, TokenTracker, RTK, and
-  Obsidian only where each tool is relevant and available.
+  Obsidian only where each tool is relevant and available. Also validate the
+  CHANGES.log Bridge Pattern when multi-agent handoff is in scope.
 - For a new machine, clone or otherwise create a local working copy of this
   repository before running helper scripts. Do not run helper commands from a
   browser-only view.
-- For claude-mem, treat issue #5 as a live errata thread. Read the latest
-  relevant comments before applying a workaround or declaring the runtime
-  healthy.
+- For claude-mem, treat issues #5, #6, and #8 as live errata threads. Read the
+  latest relevant comments before applying a workaround or declaring the
+  runtime healthy.
 
 Important constraints:
 
@@ -40,10 +43,11 @@ Important constraints:
 - When checking local settings that may contain secrets, print only secret presence and secret length.
 - Do not use or reference private repositories.
 - Do not call a plugin healthy until its runbook verification passes.
-- If a plugin requires a runtime overlay, verify the plugin version and active installed cache path before applying it.
+- If a plugin requires a runtime overlay, verify the plugin version, the
+  `codex plugin list` path, and the versioned cache path before applying it.
 - Do not apply an overlay for a different claude-mem version. If the active
-  version has no exact overlay, report discovery mode and use issue #5 only for
-  version-specific workaround guidance.
+  version has no exact overlay, report discovery mode and use the live errata
+  threads only for version-specific workaround guidance.
 - Restart Codex after plugin or hook changes.
 - On SSH, Linux, WSL, or NVM-based machines, verify `codex`, `node`, and `npx` are available in the shell that runs validation. Source `~/.nvm/nvm.sh` or use absolute paths when needed.
 - If `rg` is unavailable, use `grep` for the same targeted checks or report `ripgrep=missing`; do not fail the whole validation only because `rg` is absent.
@@ -51,15 +55,15 @@ Important constraints:
 For claude-mem specifically:
 
 - Start with docs/runbooks/plugins/claude-mem.md.
-- Read https://github.com/pitimon/exp-myCodex/issues/5 and summarize any
-  comments newer than this repository's current runbook baseline before making
-  Codex hook changes.
+- Read issues #5, #6, and #8 and summarize any comments newer than this
+  repository's current runbook baseline before making Codex hook changes.
 - If the goal is to test the runbook itself, also run docs/runbooks/claude-mem-scenario-tests.md and report which scenarios passed, failed, or were skipped.
 - Prefer installing and validating claude-mem with Claude Code first, then use the Codex plugin to connect Codex to the already-working worker.
 - Before any Codex-side install or overlay, run the runbook's Recommended Claude Code First Preflight and report whether the claude-mem worker is already healthy.
 - Check both common claude-mem health ports, 37701 and 37777, but do not accept a healthy HTTP response by itself. Match the health `workerPath`, `~/.claude-mem/worker.pid`, settings port, process owner, and version to the current user.
-- Do not treat the marketplace snapshot path as the active runtime path.
-- Verify active runtime through worker health workerPath and the installed cache under ~/.codex/plugins/cache/.
+- Do not assume there is only one active path. Record the `codex plugin list`
+  path, the versioned cache under `~/.codex/plugins/cache/`, any staging roots,
+  and the worker health `workerPath` as separate facts.
 - If `CLAUDE_MEM_CHROMA_ENABLED=true`, verify `uvx` is installed and visible to the worker. Install `uv/uvx` or explicitly report Chroma as skipped/unhealthy before calling vector search healthy.
 - Verify `scripts/version-check.js` against the active Codex cache and check for `.install-version` there; do not assume the Claude Code cache marker applies to Codex.
 - Prefer `node scripts/claude-mem-codex-compat.cjs inspect|apply|verify --json` from this repo for version-aware overlay handling.
@@ -74,8 +78,17 @@ For claude-mem specifically:
 - If duplicate `SessionStart` version-check hooks exist, keep a resilient hook
   that returns `{"continue":true}` and report any duplicate plugin-owned hook
   that exits with empty stdout.
+- For claude-mem 13.8.0, use the reviewed local overlay under
+  `overlays/claude-mem/13.8.0/` when the active plugin version exactly matches.
+- For claude-mem 13.8.0, verify `mcp-search` is enabled/running, the worker
+  reports healthy on the expected local port, hook smokes return Codex-safe JSON
+  without `suppressOutput`, and the context probe returns
+  `hookSpecificOutput.additionalContext` without a duplicate top-level
+  `systemMessage`.
+- For claude-mem 13.8.0, keep `PreToolUse` fail-open/non-blocking for ordinary
+  Codex availability, and rely on `PostToolUse` for observation capture.
 - For claude-mem 13.4.0, run `node "$PLUGIN/scripts/codex-hook-mode.cjs" balanced` after applying the overlay.
-- For claude-mem 13.6.2, keep the Codex marketplace pinned to `v13.6.2` plus the reviewed local overlay until upstream publishes an equivalent Codex-compatible bundle.
+- For legacy claude-mem 13.6.2, keep the Codex marketplace pinned to `v13.6.2` plus the reviewed local overlay unless upgrading to a newer reviewed overlay such as 13.8.0.
 - For claude-mem 13.6.2, verify `hooks/codex-hooks.json` has only the top-level `hooks` key; Codex 0.140 rejects a top-level `description` key.
 - For claude-mem 13.6.2, apply the minimal overlay to all live-resolvable roots when present: Codex local marketplace snapshot, Codex cache, Codex staging roots, Claude cache, and Claude marketplace.
 - For claude-mem 13.6.2, verify hook commands prefer 13.6.2 Codex/local roots before older Claude cache fallbacks, and that worker health reports version 13.6.2.
@@ -103,6 +116,19 @@ For RTK specifically:
 - If Homebrew is unavailable, use the official `rtk-ai/rtk` installer with the manifest version, add `~/.local/bin` to `PATH`, and smoke test `rtk --version`, `rtk gain`, and `rtk proxy echo ok`.
 - Do not install the global shell hook with `rtk init -g` unless the user explicitly wants automatic shell integration.
 
+For CHANGES.log Bridge specifically:
+
+- Use docs/runbooks/tools/changes-log-bridge.md.
+- Verify the Bridge Protocol exists in both `~/.claude/CLAUDE.md` and
+  `~/.codex/AGENTS.md` without removing existing instructions.
+- Verify `project_doc_fallback_filenames = ["CLAUDE.md"]` is top-level in
+  `~/.codex/config.toml`; if the key reads as `None`, it is probably under the
+  wrong TOML table.
+- Verify `CHANGES.log` is ignored through the configured global git
+  `core.excludesfile`.
+- Treat `CHANGES.log` as a local scratchpad. Do not include secrets, and do not
+  stage it for PRs.
+
 For Obsidian specifically:
 
 - Use docs/runbooks/tools/obsidian.md.
@@ -124,9 +150,11 @@ Provide a concise validation report with:
 - claude-mem worker health, port ownership/path, and Chroma/uvx state, when relevant
 - TokenTracker package/version, service state, dashboard health, and doctor warnings, when relevant
 - RTK version, install path, and smoke-test result, when relevant
+- CHANGES.log Bridge protocol parity, Codex fallback status, global ignore
+  status, and handoff smoke result, when relevant
 - Obsidian vault access, project note path, index rebuild result, and curation boundary, when relevant
 - release URL or verified version used
 - validation commands run
-- issue #5 comments consulted and whether a new issue comment should be added
+- issue #5/#6/#8 comments consulted and whether a new issue comment should be added
 - any remaining risk or manual follow-up
 ```
