@@ -86,49 +86,50 @@ For a human reading the repo, use this path:
 
 ## System View
 
-```text
-                                exp-myCodex
-                    public docs, manifests, prompts, overlays
-                                      |
-                                      v
-+--------------------------------------------------------------------------------+
-|                                     Codex                                      |
-|                                                                                |
-|  Install and update                 Verify runtime                 Improve use |
-|  ------------------                 --------------                 ----------- |
-|  codex plugin add                   codex plugin list              8-Habit     |
-|  marketplace upgrade                codex mcp list                 Governance  |
-|  remove/add fallback                active plugin path             RTK         |
-|  userspace bridge                   worker health                  TokenTracker|
-|                                     project index                  Obsidian    |
-|                                     git ignore proof               CHANGES.log |
-|                                     service status                 Bridge      |
-|                                                                                |
-|        +------------------+        +------------------+        +-------------+ |
-|        | 8-Habit AI Dev   |        |   claude-mem     |        | Governance  | |
-|        | workflow skills  |        | hooks + memory   |        | ADR/checks  | |
-|        +------------------+        +--------+---------+        +-------------+ |
-|                                            |                                   |
-|                                            v                                   |
-|                              +----------------------------+                    |
-|                              | worker / SQLite / mcp-search|                   |
-|                              | historical agent memory     |                   |
-|                              +-------------+--------------+                    |
-|                                            |                                   |
-|                                            v                                   |
-|                              +----------------------------+                    |
-|                              | Obsidian project notes      |                   |
-|                              | curated second brain        |                   |
-|                              +----------------------------+                    |
-|                                                                                |
-|        +------------------+        +------------------+        +-------------+ |
-|        | RTK              |        | TokenTracker     |        | Overlays    | |
-|        | compact output   |        | token visibility |        | exact fixes | |
-|        +------------------+        +------------------+        +-------------+ |
-+--------------------------------------------------------------------------------+
-                                      ^
-                                      |
-                       public mirrors: GitHub and Gitea
+```mermaid
+flowchart TB
+  repo["exp-myCodex<br/>public docs + manifests + prompts + overlays"]
+  mirrors["Public mirrors<br/>GitHub + Gitea"]
+  prompt["Target-machine prompt<br/>docs/prompts/codex-plugin-validation-prompt.md"]
+
+  subgraph target["Target Codex Workstation"]
+    direction TB
+
+    subgraph control["Install + Runtime Verification"]
+      direction LR
+      install["Install/update<br/>codex plugin add<br/>marketplace refresh"]
+      verify["Verify active runtime<br/>codex plugin list<br/>codex mcp list<br/>lifecycle smokes"]
+      evidence["Evidence report<br/>versions, paths, health,<br/>warnings, skips"]
+    end
+
+    subgraph capabilities["Operational Capabilities"]
+      direction LR
+      memory["claude-mem<br/>hooks + worker + mcp-search"]
+      workflow["8-Habit AI Dev<br/>workflow skills"]
+      governance["claude-governance<br/>ADR + compliance checks"]
+      handoff["CHANGES.log Bridge<br/>multi-agent handoff"]
+    end
+
+    subgraph support["Support Tooling"]
+      direction LR
+      obsidian["Obsidian<br/>curated project notes"]
+      rtk["RTK<br/>compact command output"]
+      tokens["TokenTracker<br/>token/cost visibility"]
+      overlays["Exact-version overlays<br/>Codex compatibility fixes"]
+    end
+  end
+
+  repo --> prompt --> target
+  repo --> mirrors
+  install --> verify --> evidence
+  verify --> memory
+  verify --> workflow
+  verify --> governance
+  verify --> handoff
+  memory --> obsidian
+  overlays --> verify
+  rtk --> evidence
+  tokens --> evidence
 ```
 
 ## Evidence Model
