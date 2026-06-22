@@ -14,8 +14,11 @@ Then read:
 
 1. docs/README.md
 2. docs/manifests/codex-plugins.yaml
-3. the relevant per-plugin runbook under docs/runbooks/plugins/
-4. for claude-mem, the latest comments in these live errata threads:
+3. docs/manifests/codex-tools.yaml
+4. docs/manifests/verified-versions.yaml
+5. the relevant per-plugin runbook under docs/runbooks/plugins/
+6. the relevant per-tool runbook under docs/runbooks/tools/
+7. for claude-mem, the latest comments in these live errata threads:
    - https://github.com/pitimon/exp-myCodex/issues/5
    - https://github.com/pitimon/exp-myCodex/issues/6
    - https://github.com/pitimon/exp-myCodex/issues/8
@@ -39,8 +42,10 @@ Default scope:
 
 Important constraints:
 
-- Do not print API keys, OAuth tokens, bearer tokens, private keys, kubeconfigs, passwords, or sensitive local data.
-- When checking local settings that may contain secrets, print only secret presence and secret length.
+- Do not print API keys, OAuth tokens, bearer tokens, private keys, kubeconfigs,
+  passwords, or sensitive local data.
+- When checking local settings that may contain secrets, print only secret
+  presence and secret length.
 - Do not use or reference private repositories.
 - Do not call a plugin healthy until its runbook verification passes.
 - If a plugin requires a runtime overlay, verify the plugin version, the
@@ -49,8 +54,12 @@ Important constraints:
   version has no exact overlay, report discovery mode and use the live errata
   threads only for version-specific workaround guidance.
 - Restart Codex after plugin or hook changes.
-- On SSH, Linux, WSL, or NVM-based machines, verify `codex`, `node`, and `npx` are available in the shell that runs validation. Source `~/.nvm/nvm.sh` or use absolute paths when needed.
-- If `rg` is unavailable, use `grep` for the same targeted checks or report `ripgrep=missing`; do not fail the whole validation only because `rg` is absent.
+- On SSH, Linux, WSL, or NVM-based machines, verify `codex`, `node`, and `npx`
+  are available in the shell that runs validation. Source `~/.nvm/nvm.sh` or
+  use absolute paths when needed.
+- If `rg` is unavailable, use `grep` for the same targeted checks or report
+  `ripgrep=missing`; do not fail the whole validation only because `rg` is
+  absent.
 
 For claude-mem specifically:
 
@@ -121,11 +130,20 @@ For CHANGES.log Bridge specifically:
 - Use docs/runbooks/tools/changes-log-bridge.md.
 - Verify the Bridge Protocol exists in both `~/.claude/CLAUDE.md` and
   `~/.codex/AGENTS.md` without removing existing instructions.
+- Confirm the two Bridge Protocol sections are semantically identical except for
+  the expected agent label examples.
 - Verify `project_doc_fallback_filenames = ["CLAUDE.md"]` is top-level in
   `~/.codex/config.toml`; if the key reads as `None`, it is probably under the
   wrong TOML table.
 - Verify `CHANGES.log` is ignored through the configured global git
-  `core.excludesfile`.
+  `core.excludesfile` with `git check-ignore -v CHANGES.log`.
+- Also run `git status --short --ignored -- CHANGES.log` to prove it is ignored
+  and not staged.
+- If a `CHANGES.log` exists, inspect only the recent tail and compare the latest
+  entry with `git diff --name-only` / `git status --short` so the report catches
+  missing or stale handoff notes.
+- Check `git config --get core.hooksPath || true` and report any repo-tracked
+  hook path separately; the Bridge Protocol does not replace repository hooks.
 - Treat `CHANGES.log` as a local scratchpad. Do not include secrets, and do not
   stage it for PRs.
 

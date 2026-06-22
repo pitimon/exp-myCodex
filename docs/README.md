@@ -1,61 +1,90 @@
 # Codex Handoff
 
-This directory documents public-safe setup and validation flows from a real
-Codex workstation setup. The intent is to help other people prepare Codex with
-memory, workflow, verification, and token-efficiency habits from day one.
+This directory contains public-safe setup and validation flows from a real Codex
+workstation. Use it to prepare another machine with memory, workflow,
+verification, handoff, and token-efficiency habits from day one.
 
-## Quick Start
+## Target-Machine Prompt
 
-For a target workstation, use:
+Start a new workstation with this prompt:
 
 ```text
-docs/prompts/codex-plugin-validation-prompt.md
+Read https://github.com/pitimon/exp-myCodex
+
+Then follow docs/prompts/codex-plugin-validation-prompt.md.
 ```
 
-Public mirrors:
+The same repository is mirrored at:
 
 ```text
 https://github.com/pitimon/exp-myCodex
 https://gitea.ipv9.me/pitimon/exp-myCodex
 ```
 
-For exact plugin commands, read the per-plugin runbook:
+## Reading Order
+
+1. `../README.md` - overall model, evidence standard, and public boundary.
+2. `prompts/codex-plugin-validation-prompt.md` - copyable prompt for a target
+   Codex session.
+3. `manifests/codex-plugins.yaml` - plugin selectors, versions, and
+   verification expectations.
+4. `manifests/codex-tools.yaml` - adjacent tools such as RTK, TokenTracker, and
+   Bridge.
+5. `manifests/verified-versions.yaml` - current reviewed baseline and caveats.
+6. `runbooks/tools/changes-log-bridge.md` - multi-agent CHANGES.log handoff
+   setup.
+7. `runbooks/plugins/claude-mem.md` - memory worker, hook, MCP, and overlay
+   validation.
+8. `runbooks/claude-mem-scenario-tests.md` - end-to-end scenario checks for the
+   memory runbook.
+
+## Runbook Index
+
+Plugin runbooks:
 
 ```text
-docs/runbooks/plugins/8-habit-ai-dev.md
-docs/runbooks/plugins/claude-governance.md
-docs/runbooks/plugins/claude-mem.md
+runbooks/plugins/8-habit-ai-dev.md
+runbooks/plugins/claude-governance.md
+runbooks/plugins/claude-mem.md
+runbooks/plugins/template.md
 ```
 
-For validating the `claude-mem` runbook against a real workstation, use:
+Tool runbooks:
 
 ```text
-docs/runbooks/claude-mem-scenario-tests.md
+runbooks/tools/changes-log-bridge.md
+runbooks/tools/obsidian.md
+runbooks/tools/rtk.md
+runbooks/tools/tokentracker.md
 ```
 
-For non-plugin tooling, read:
+Compatibility helper:
 
 ```text
-docs/runbooks/tools/obsidian.md
-docs/runbooks/tools/changes-log-bridge.md
-docs/runbooks/tools/rtk.md
-docs/runbooks/tools/tokentracker.md
+../scripts/claude-mem-codex-compat.cjs
 ```
 
-For version-aware compatibility helpers, read:
+## Manifest Index
 
-```text
-scripts/claude-mem-codex-compat.cjs
-```
+- `manifests/codex-plugins.yaml` records Codex plugin selectors, versions,
+  sources, and smoke tests.
+- `manifests/codex-tools.yaml` records non-plugin tools and workflow-only setup
+  checks.
+- `manifests/public-mirrors.yaml` records GitHub/Gitea publication targets and
+  mirror policy.
+- `manifests/verified-versions.yaml` records reviewed plugin/tool versions and
+  known caveats.
 
-For a compact inventory, read:
+## Validation Standard
 
-```text
-docs/manifests/codex-plugins.yaml
-docs/manifests/codex-tools.yaml
-docs/manifests/public-mirrors.yaml
-docs/manifests/verified-versions.yaml
-```
+Documentation should report runtime evidence, not just repository state. For
+example:
+
+- use `codex plugin list` for active plugin paths
+- use `codex mcp list` and smoke queries for MCP availability
+- use `git check-ignore -v CHANGES.log` for Bridge ignore proof
+- use lifecycle `codex exec` smokes before calling `claude-mem` healthy
+- record skipped checks explicitly instead of implying they passed
 
 ## Rules
 

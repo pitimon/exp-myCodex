@@ -15,7 +15,11 @@ tools:
     runbook: docs/runbooks/tools/changes-log-bridge.md
     smoke_tests:
       - python3 -c "import tomllib,pathlib; d=tomllib.load(open(pathlib.Path.home()/'.codex/config.toml','rb')); print(d.get('project_doc_fallback_filenames'))"
-      - git check-ignore CHANGES.log
+      - git check-ignore -v CHANGES.log
+      - git status --short --ignored -- CHANGES.log
+      - tail -40 CHANGES.log
+      - git diff --name-only
+      - git config --get core.hooksPath || true
       - compare ~/.claude/CLAUDE.md and ~/.codex/AGENTS.md bridge sections
 
   - name: obsidian

@@ -64,8 +64,10 @@ Expected outcome is a concise bootstrap report that proves the active runtime:
 - `claude-mem` worker health was matched to the current user
 - Codex plugin path, versioned cache, staging roots, and user-level hooks were
   inspected separately
-- any exact-version overlay or issue-documented workaround was applied only after the
-  active version was identified
+- any exact-version overlay or issue-documented workaround was applied only
+  after the active version was identified
+- CHANGES.log Bridge setup was verified when Claude Code and Codex may share a
+  repository
 - a real `codex exec` lifecycle smoke completed startup, prompt, tool, and stop
   hooks with no `Failed` entries
 
@@ -78,8 +80,9 @@ For a human reading the repo, use this path:
 | 3    | issues `#5`, `#6`, and `#8`                      | Read the live `claude-mem` hook and upgrade errata |
 | 4    | `docs/manifests/codex-plugins.yaml`              | See recommended plugin selectors and versions      |
 | 5    | `docs/manifests/codex-tools.yaml`                | See adjacent CLI tools and smoke tests             |
-| 6    | `docs/runbooks/plugins/claude-mem.md`            | Validate the memory layer                          |
-| 7    | `docs/runbooks/claude-mem-scenario-tests.md`     | Stress-test the runbook on a real machine          |
+| 6    | `docs/runbooks/tools/changes-log-bridge.md`      | Prepare multi-agent local handoff                  |
+| 7    | `docs/runbooks/plugins/claude-mem.md`            | Validate the memory layer                          |
+| 8    | `docs/runbooks/claude-mem-scenario-tests.md`     | Stress-test the runbook on a real machine          |
 
 ## System View
 
@@ -96,9 +99,10 @@ For a human reading the repo, use this path:
 |  codex plugin add                   codex plugin list              8-Habit     |
 |  marketplace upgrade                codex mcp list                 Governance  |
 |  remove/add fallback                active plugin path             RTK         |
-|                                     worker health                  TokenTracker|
+|  userspace bridge                   worker health                  TokenTracker|
 |                                     project index                  Obsidian    |
-|                                     service status                             |
+|                                     git ignore proof               CHANGES.log |
+|                                     service status                 Bridge      |
 |                                                                                |
 |        +------------------+        +------------------+        +-------------+ |
 |        | 8-Habit AI Dev   |        |   claude-mem     |        | Governance  | |
@@ -144,6 +148,7 @@ Every runbook pushes the operator toward observable evidence:
 | Obsidian notes      | raw capture files, transcript dumps       | curated project note, source IDs, index link, no secrets        |
 | Overlays            | newest directory by timestamp             | exact active plugin version and matching overlay directory      |
 | TokenTracker/RTK    | package install success                   | version output, service status, smoke tests                     |
+| CHANGES.log Bridge  | copied prose or assumed global ignore     | protocol parity, top-level fallback, `git check-ignore -v`      |
 
 ## Toolchain
 
@@ -157,6 +162,27 @@ Every runbook pushes the operator toward observable evidence:
 | Efficiency    | RTK                   | Reduce noisy command output before it reaches Codex context               | `docs/runbooks/tools/rtk.md`                 |
 | Handoff       | CHANGES.log Bridge    | Coordinate Claude Code and Codex through a local git-ignored scratchpad   | `docs/runbooks/tools/changes-log-bridge.md`  |
 | Compatibility | `claude-mem` overlays | Patch known Codex compatibility breaks by exact plugin version            | `overlays/`                                  |
+
+## The CHANGES.log Bridge Pattern
+
+The Bridge Pattern prepares a target workstation for projects where Claude Code
+and Codex may work in the same git repository. It is intentionally a userspace
+setup, not a repo-local config change.
+
+The runbook verifies:
+
+- the same Bridge Protocol exists in `~/.claude/CLAUDE.md` and
+  `~/.codex/AGENTS.md`
+- `project_doc_fallback_filenames = ["CLAUDE.md"]` is a top-level Codex config
+  key, so Codex can read project `CLAUDE.md` files when no `AGENTS.md` exists
+- `CHANGES.log` is ignored through the configured global git excludesfile
+- the latest handoff entry matches recent file changes and is not staged for PRs
+- `core.hooksPath` is noted when repo-tracked git hooks need separate handling
+
+Use `docs/runbooks/tools/changes-log-bridge.md` for the full implementation and
+verification steps. The repo documents the pattern for other machines; it should
+not mutate this workstation's global `~/.claude`, `~/.codex`, or git config
+unless the operator explicitly requests that.
 
 ## The `claude-mem` Pattern
 

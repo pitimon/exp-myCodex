@@ -1287,7 +1287,12 @@ real examples. Avoid broad skip rules that would drop useful incident evidence.
 
 ## Public Export Note
 
-This public export intentionally includes only the Codex + `claude-mem`
-handoff runbook and the reviewed `claude-mem` 13.4.0 / 13.4.1 / 13.4.2 Codex overlay
-assets. Optional private-workstation Obsidian runbooks and historical incident
-handover notes are not included.
+This public export includes the reusable Codex workstation handoff materials:
+the validation prompt, plugin/tool manifests, public runbooks, compatibility
+helper, reviewed `claude-mem` overlays for exact 13.4.x / 13.6.2 / 13.8.0
+runtimes, Obsidian curation guidance, RTK and TokenTracker checks, and the
+CHANGES.log Bridge Pattern.
+
+It intentionally excludes private workstation records: raw transcripts,
+customer or infrastructure context, secrets, private issue links, and historical
+incident handover notes that are not safe as public setup guidance.

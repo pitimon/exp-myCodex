@@ -38,7 +38,9 @@ tools:
     notes:
       - Documents the userspace Bridge Protocol for ~/.claude/CLAUDE.md and ~/.codex/AGENTS.md.
       - Codex fallback requires top-level project_doc_fallback_filenames = ["CLAUDE.md"] in ~/.codex/config.toml.
-      - CHANGES.log should be ignored through the configured global git excludesfile.
+      - CHANGES.log should be ignored through the configured global git excludesfile and proven with git check-ignore -v plus git status --short --ignored -- CHANGES.log.
+      - Compare the latest CHANGES.log entry with git status --short and git diff --name-only before declaring handoff current.
+      - Report git config --get core.hooksPath separately when repo-tracked hooks are present; the Bridge Protocol does not install or replace hooks.
       - End-to-end proof is CC appending, Codex reading, then Codex appending without overwriting.
 
   obsidian:
