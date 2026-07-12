@@ -4,6 +4,24 @@
 # useful around Codex but are not installed through `codex plugin`.
 
 tools:
+  - name: meta-loop-control
+    display_name: Meta-Loop Control Ledger
+    package: workflow-only
+    verified_version: "1"
+    runbook: docs/runbooks/tools/meta-loop.md
+    validation_prompt: docs/prompts/meta-loop-validation-prompt.md
+    cli_discovery: >-
+      `--help` prints usage to stdout and exits zero. A missing or invalid
+      action prints usage to stderr and exits nonzero.
+    smoke_tests:
+      - node scripts/meta-loop-control.cjs --help
+      - node scripts/meta-loop-control.cjs validate-packet --packet <packet.json>
+      - node scripts/meta-loop-control.cjs claim --ledger <temporary-ledger.json> --packet <packet.json> --worker <worker-id> --capacity 1 --expires-at 2099-01-01T00:00:00.000Z
+      - node scripts/meta-loop-control.cjs confirm-spawn --ledger <temporary-ledger.json> --worker <worker-id> --attestation <non-sensitive-label>
+      - node scripts/meta-loop-control.cjs record-return --ledger <temporary-ledger.json> --worker <worker-id> --attestation <non-sensitive-label> --result <non-sensitive-result>
+      - node scripts/meta-loop-control.cjs synthesize --ledger <temporary-ledger.json>
+      - node scripts/meta-loop-control.cjs finish --ledger <temporary-ledger.json>
+
   - name: changes-log-bridge
     display_name: CHANGES.log Bridge Pattern
     package_manager:

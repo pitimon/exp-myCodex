@@ -28,8 +28,8 @@ https://gitea.ipv9.me/pitimon/exp-myCodex
    Codex session.
 3. `manifests/codex-plugins.yaml` - plugin selectors, versions, and
    verification expectations.
-4. `manifests/codex-tools.yaml` - adjacent tools such as RTK, TokenTracker, and
-   Bridge.
+4. `manifests/codex-tools.yaml` - adjacent tools and workflow-only controls
+   such as Meta-Loop Control, RTK, TokenTracker, and Bridge.
 5. `manifests/verified-versions.yaml` - current reviewed baseline and caveats.
 6. `runbooks/tools/changes-log-bridge.md` - multi-agent CHANGES.log handoff
    setup.
@@ -37,6 +37,10 @@ https://gitea.ipv9.me/pitimon/exp-myCodex
    validation.
 8. `runbooks/claude-mem-scenario-tests.md` - end-to-end scenario checks for the
    memory runbook.
+9. `runbooks/tools/meta-loop.md` - local task-ledger lifecycle, single-writer
+   safety, and attestation boundary.
+10. `prompts/meta-loop-validation-prompt.md` - dedicated, synthetic
+    temporary-ledger validation flow for Meta-Loop Control.
 
 ## Runbook Index
 
@@ -49,10 +53,17 @@ runbooks/plugins/claude-mem.md
 runbooks/plugins/template.md
 ```
 
+Validation prompts:
+
+```text
+prompts/meta-loop-validation-prompt.md
+```
+
 Tool runbooks:
 
 ```text
 runbooks/tools/changes-log-bridge.md
+runbooks/tools/meta-loop.md
 runbooks/tools/obsidian.md
 runbooks/tools/rtk.md
 runbooks/tools/tokentracker.md
@@ -69,7 +80,7 @@ Compatibility helper:
 - `manifests/codex-plugins.yaml` records Codex plugin selectors, versions,
   sources, and smoke tests.
 - `manifests/codex-tools.yaml` records non-plugin tools and workflow-only setup
-  checks.
+  checks, including its Meta-Loop Control validation prompt.
 - `manifests/public-mirrors.yaml` records GitHub/Gitea publication targets and
   mirror policy.
 - `manifests/verified-versions.yaml` records reviewed plugin/tool versions and
