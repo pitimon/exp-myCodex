@@ -37,17 +37,30 @@ machine-specific incident records are intentionally excluded.
 
 ## Start Here
 
-For a new workstation, give Codex this repo and then run the validation prompt:
+For a new workstation, install and authenticate the Codex CLI first. Then paste
+this **single bootstrap prompt** into Codex. It authorizes the documented
+baseline installation on that workstation, but requires a pre-flight, backups,
+and runtime verification before anything is called healthy:
 
 ```text
-Read https://github.com/pitimon/exp-myCodex
+You are preparing this as a new Codex workstation. Codex is already installed
+and authenticated. Read https://github.com/pitimon/exp-myCodex, clone a local
+working copy if one is not present, then follow
+docs/prompts/codex-plugin-validation-prompt.md in full.
 
-Then follow docs/prompts/codex-plugin-validation-prompt.md.
+Run its Phase 0 pre-flight before changing anything. If the pre-flight passes,
+install and verify the documented baseline components that are supported on
+this platform. Back up any existing user configuration before changing it,
+never print secrets, do not use private repositories, and report every skipped
+or blocked component instead of guessing. Finish with the prompt's evidence
+report and clearly state whether a Codex restart is required.
 ```
 
-That prompt is intentionally short. The validation prompt itself now tells the
-target Codex session to read the live `claude-mem` errata threads before it
-declares a new machine healthy:
+The prompt cannot install Codex itself and does not use `sudo`, change network
+or security policy, overwrite existing user configuration without a backup, or
+claim that optional tooling is healthy without its runtime checks. The canonical
+prompt reads the live `claude-mem` errata threads before it declares that layer
+healthy:
 
 ```text
 https://github.com/pitimon/exp-myCodex/issues/5

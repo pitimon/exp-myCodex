@@ -1,9 +1,48 @@
 # Codex Plugin Validation Prompt
 
-Use this prompt on a target workstation:
+Use this prompt on a target workstation. It is the canonical single prompt for
+a new-machine bootstrap after the Codex CLI has already been installed and
+authenticated.
 
 ```text
-You are installing, updating, or validating Codex plugins on this workstation.
+You are preparing this as a new Codex workstation. Codex is already installed
+and authenticated. You are authorized to perform the documented userspace
+installation and configuration steps below, but must complete Phase 0 before
+changing anything.
+
+## Phase 0 — pre-flight (read-only)
+
+1. Identify OS, architecture, shell, current user, available disk space, and
+   whether `git`, `node`, `npm`, `npx`, `codex`, and (when relevant) `claude`
+   are available from the shell that will run the tools. Record
+   `execution_context=local-shell|ssh|wsl`, the current user, and whether the
+   relevant executable paths work in that same context. Run helpers only from
+   a local authenticated shell or a verified SSH/WSL shell, never from a
+   browser preview or an unverified remote session.
+2. Record current `codex --version`, `codex plugin list`, `codex mcp list`, and
+   the presence—not values—of existing `~/.codex` and `~/.claude` config/hook
+   files. Check whether a local checkout of this repository already exists.
+3. Clone one public mirror to a local working copy when needed. Do not run
+   helper scripts from a browser-only view.
+4. Before changing a user config, hook, or overlay, make a timestamped backup
+   and state the exact path that will change. Never overwrite an unknown
+   configuration without preserving it.
+5. If a prerequisite is absent and requires admin privileges, a GUI installer,
+   private credentials, or a choice not covered by this repository, do not
+   guess or use `sudo`. Mark that component blocked or skipped and continue
+   with the safe components.
+6. Select one platform section before running installation commands:
+   macOS, Linux, Windows PowerShell, or WSL. Use only the matching runbook
+   commands and service model. If the execution context and platform section
+   do not agree, report `platform=ambiguous` and stop before mutation.
+
+## Phase 1 — install and verify
+
+Install the documented baseline components supported on this platform, using
+the manifests and runbooks below. Prefer the exact commands in this repository
+over invented variants, but select the matching macOS, Linux, Windows
+PowerShell, or WSL section first. Use the per-component verification before
+calling any component healthy.
 
 Start by reading one of these public mirrors:
 
@@ -22,6 +61,17 @@ Then read:
    - https://github.com/pitimon/exp-myCodex/issues/5
    - https://github.com/pitimon/exp-myCodex/issues/6
    - https://github.com/pitimon/exp-myCodex/issues/8
+
+## Phase 2 — report and handoff
+
+Finish with a concise evidence report: platform and shell, selected platform
+section, installed/updated components, active paths and versions, backups made,
+checks run, components skipped/blocked with reasons, residual risks, rollback
+locations, and whether Codex must be restarted. Never label an unverified
+component healthy. If verification fails, stop and propose a rollback that
+restores only the timestamped backup created for the changed file. Do not
+restore, uninstall packages, delete caches, or restart services automatically;
+wait for user approval, then verify the restored configuration and runtime.
 
 Goal:
 Bootstrap, update, or validate the requested Codex plugin(s) using the public
