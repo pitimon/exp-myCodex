@@ -14,6 +14,26 @@ plugins:
       - Issues #5, #6, and #8 remain the living field-observation threads for marketplace refresh drift, schema drift, user-level hooks, missing marker/filter files, upgrade gaps, and lifecycle smoke failures.
       - Historical overlays remain available for exact 13.4.x and 13.6.2 runtimes, but must not be copied forward.
       - Run post-install verification and fresh startup/tool-triggering codex exec smokes before calling healthy.
+    compatibility_policy:
+      reviewed_overlay_versions:
+        - "13.4.0"
+        - "13.4.1"
+        - "13.4.2"
+        - "13.6.2"
+        - "13.8.0"
+      exact_match_required: true
+      record_separately:
+        - active Codex plugin version and path
+        - claude-mem worker version and path
+        - selected overlay version or missing-overlay state
+      exact_match_action: Use only the matching overlay and run its complete verification.
+      version_drift_action: Do not mutate plugin files. Run the runbook discovery checks, report overlay=missing_for_version:<version>, and use only relevant live errata as diagnostic context.
+      live_errata:
+        issues: [5, 6, 8]
+        consult_when:
+          - active version has no exact reviewed overlay
+          - a matching overlay does not resolve a hook, worker, MCP, or lifecycle-smoke failure
+          - the runbook baseline predates a newly observed target symptom
 
   8-habit-ai-dev:
     selector: 8-habit-ai-dev@pitimon-8-habit-ai-dev

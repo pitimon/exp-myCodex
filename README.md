@@ -58,18 +58,18 @@ report and clearly state whether a Codex restart is required.
 
 The prompt cannot install Codex itself and does not use `sudo`, change network
 or security policy, overwrite existing user configuration without a backup, or
-claim that optional tooling is healthy without its runtime checks. The canonical
-prompt reads the live `claude-mem` errata threads before it declares that layer
-healthy:
+claim that optional tooling is healthy without its runtime checks. It keeps the
+first prompt stable by discovering the target's active versions first, then
+selecting an exact reviewed path or a no-mutation discovery path. This matters
+because Codex, `claude-mem`, Node, shell, and marketplace versions can differ
+between machines.
 
-```text
-https://github.com/pitimon/exp-myCodex/issues/5
-https://github.com/pitimon/exp-myCodex/issues/6
-https://github.com/pitimon/exp-myCodex/issues/8
-```
-
-This keeps the first prompt stable while the operational details continue to
-change across Codex, `claude-mem`, Node, shell, and marketplace updates.
+For `claude-mem`, issues [#5](https://github.com/pitimon/exp-myCodex/issues/5),
+[#6](https://github.com/pitimon/exp-myCodex/issues/6), and
+[#8](https://github.com/pitimon/exp-myCodex/issues/8) remain public live
+errata. They are consulted only when the detected version or symptom makes them
+relevant; they are not a blanket instruction to copy historical workarounds to
+every workstation.
 
 Expected outcome on a target workstation is not "the latest plugin installed."
 Expected outcome is a concise bootstrap report that proves the active runtime:
@@ -87,17 +87,18 @@ Expected outcome is a concise bootstrap report that proves the active runtime:
 
 For a human reading the repo, use this path:
 
-| Step | Read                                             | Outcome                                            |
-| ---- | ------------------------------------------------ | -------------------------------------------------- |
-| 1    | `docs/README.md`                                 | Understand the documentation map                   |
-| 2    | `docs/prompts/codex-plugin-validation-prompt.md` | Get the target-machine validation prompt           |
-| 3    | issues `#5`, `#6`, and `#8`                      | Read the live `claude-mem` hook and upgrade errata |
-| 4    | `docs/manifests/codex-plugins.yaml`              | See recommended plugin selectors and versions      |
-| 5    | `docs/manifests/codex-tools.yaml`                | See adjacent CLI tools and smoke tests             |
-| 6    | `docs/runbooks/tools/changes-log-bridge.md`      | Prepare multi-agent local handoff                  |
-| 7    | `docs/runbooks/plugins/claude-mem.md`            | Validate the memory layer                          |
-| 8    | `docs/runbooks/claude-mem-scenario-tests.md`     | Stress-test the runbook on a real machine          |
-| 9    | `docs/prompts/meta-loop-validation-prompt.md`    | Validate the workflow-only control ledger safely   |
+| Step | Read                                             | Outcome                                           |
+| ---- | ------------------------------------------------ | ------------------------------------------------- |
+| 1    | `docs/README.md`                                 | Understand the documentation map                  |
+| 2    | `docs/prompts/codex-plugin-validation-prompt.md` | Get the target-machine validation prompt          |
+| 3    | `docs/manifests/verified-versions.yaml`          | Compare the target version to reviewed support    |
+| 4    | `docs/manifests/codex-plugins.yaml`              | See recommended plugin selectors and versions     |
+| 5    | `docs/manifests/codex-tools.yaml`                | See adjacent CLI tools and smoke tests            |
+| 6    | `docs/runbooks/tools/changes-log-bridge.md`      | Prepare multi-agent local handoff                 |
+| 7    | `docs/runbooks/plugins/claude-mem.md`            | Validate the memory layer and its drift policy    |
+| 8    | issues `#5`, `#6`, and `#8` when relevant        | Resolve live `claude-mem` errata without guessing |
+| 9    | `docs/runbooks/claude-mem-scenario-tests.md`     | Stress-test the runbook on a real machine         |
+| 10   | `docs/prompts/meta-loop-validation-prompt.md`    | Validate the workflow-only control ledger safely  |
 
 ## System View
 

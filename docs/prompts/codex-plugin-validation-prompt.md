@@ -57,10 +57,8 @@ Then read:
 4. docs/manifests/verified-versions.yaml
 5. the relevant per-plugin runbook under docs/runbooks/plugins/
 6. the relevant per-tool runbook under docs/runbooks/tools/
-7. for claude-mem, the latest comments in these live errata threads:
-   - https://github.com/pitimon/exp-myCodex/issues/5
-   - https://github.com/pitimon/exp-myCodex/issues/6
-   - https://github.com/pitimon/exp-myCodex/issues/8
+7. for claude-mem, its compatibility policy in
+   docs/manifests/verified-versions.yaml before selecting an overlay or errata.
 
 ## Phase 2 — report and handoff
 
@@ -86,9 +84,9 @@ Default scope:
 - For a new machine, clone or otherwise create a local working copy of this
   repository before running helper scripts. Do not run helper commands from a
   browser-only view.
-- For claude-mem, treat issues #5, #6, and #8 as live errata threads. Read the
-  latest relevant comments before applying a workaround or declaring the
-  runtime healthy.
+- For claude-mem, use its compatibility policy to choose exactly one state:
+  `reviewed-exact-match`, `discovery-no-mutation`, or `supported-with-failure`.
+  Record that state before changing a hook or overlay.
 
 Important constraints:
 
@@ -114,8 +112,22 @@ Important constraints:
 For claude-mem specifically:
 
 - Start with docs/runbooks/plugins/claude-mem.md.
-- Read issues #5, #6, and #8 and summarize any comments newer than this
-  repository's current runbook baseline before making Codex hook changes.
+- Record separately: active Codex plugin version and path, worker version and
+  path, the manifest's reviewed baseline, and the selected overlay version or
+  `overlay=missing_for_version:<version>`. Do not infer one from another.
+- If the active plugin version exactly matches a reviewed overlay, use only that
+  overlay and run its complete verification. This is `reviewed-exact-match`.
+- If no exact reviewed overlay exists, enter `discovery-no-mutation`: run the
+  Version Drift Policy checks, collect evidence, and do not patch or copy an
+  older overlay forward. A missing overlay alone is not unhealthy.
+- Use issues #5, #6, and #8 only as live errata when the selected state is
+  `discovery-no-mutation`, a matching overlay leaves a hook/worker/MCP/lifecycle
+  smoke failure, or a target symptom is newer than the runbook baseline.
+  Summarize only the comments relevant to the detected version or symptom; do
+  not treat historical issue text as an installation recipe.
+- If a reviewed exact-match setup still fails verification, record
+  `supported-with-failure`, stop mutation, and report the failed evidence plus
+  the applicable errata. Do not declare the runtime healthy.
 - If the goal is to test the runbook itself, also run docs/runbooks/claude-mem-scenario-tests.md and report which scenarios passed, failed, or were skipped.
 - Prefer installing and validating claude-mem with Claude Code first, then use the Codex plugin to connect Codex to the already-working worker.
 - Before any Codex-side install or overlay, run the runbook's Recommended Claude Code First Preflight and report whether the claude-mem worker is already healthy.
