@@ -10,6 +10,13 @@ tools:
     verified_version: "1"
     runbook: docs/runbooks/tools/meta-loop.md
     validation_prompt: docs/prompts/meta-loop-validation-prompt.md
+    bootstrap_contract:
+      default_bootstrap_mode: validate-only
+      persistent_install: false
+      native_spawn: false
+      temporary_ledger: required
+      temporary_ledger_cleanup: required
+      hook_installation: false
     cli_discovery: >-
       `--help` prints usage to stdout and exits zero. A missing or invalid
       action prints usage to stderr and exits nonzero.

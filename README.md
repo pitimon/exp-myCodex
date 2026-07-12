@@ -82,6 +82,9 @@ Expected outcome is a concise bootstrap report that proves the active runtime:
   after the active version was identified
 - CHANGES.log Bridge setup was verified when Claude Code and Codex may share a
   repository
+- Meta-Loop Control completed a temporary-ledger, validate-only lifecycle when
+  multi-agent coordination is in scope; it did not install a hook or launch a
+  worker
 - a real `codex exec` lifecycle smoke completed startup, prompt, tool, and stop
   hooks with no `Failed` entries
 
@@ -118,6 +121,14 @@ flowchart TB
       evidence["Evidence report<br/>versions, paths, health,<br/>warnings, skips"]
     end
 
+    subgraph coordination["Workflow-only Coordination"]
+      direction LR
+      orchestrator["Codex Orchestrator<br/>decision and native spawn outside ledger"]
+      ledger["Meta-Loop Control ledger<br/>workflow-only; never launches workers"]
+      receipts["Managed receipts<br/>recorded after independent spawn/outcome evidence"]
+      workers["Native workers<br/>spawned outside the ledger"]
+    end
+
     subgraph capabilities["Operational Capabilities"]
       direction LR
       memory["claude-mem<br/>hooks + worker + mcp-search"]
@@ -138,6 +149,10 @@ flowchart TB
   repo --> prompt --> target
   repo --> mirrors
   install --> verify --> evidence
+  orchestrator -->|records lifecycle decision| ledger
+  ledger -->|records receipts only| receipts --> evidence
+  orchestrator -->|native spawn decision| workers
+  workers -. independent spawn/outcome evidence .-> receipts
   verify --> memory
   verify --> workflow
   verify --> governance
@@ -148,6 +163,17 @@ flowchart TB
   tokens --> evidence
 ```
 
+## The Meta-Loop Control Pattern
+
+Meta-Loop Control is a local, workflow-only ledger for a bounded task. The
+Codex Orchestrator remains the decision-maker and owns any native worker spawn;
+that decision occurs outside the ledger. The ledger records claims, operator
+attestations, returns, and synthesis only after independent spawn or outcome
+evidence exists. It never launches, observes, authenticates, or authorizes a
+worker, and its receipt is not spawn proof. Use its temporary-ledger validation
+to prove the CLI lifecycle, then retain independent spawn evidence when a real
+worker is used.
+
 ## Evidence Model
 
 This repo avoids the common failure mode where documentation says “installed”
@@ -156,16 +182,17 @@ cache.
 
 Every runbook pushes the operator toward observable evidence:
 
-| Layer               | Do Not Trust Alone                        | Verify Instead                                                  |
-| ------------------- | ----------------------------------------- | --------------------------------------------------------------- |
-| Codex plugins       | repo files, release tags, old screenshots | `codex plugin list`, active plugin path, installed version      |
-| MCP                 | plugin manifest only                      | `codex mcp list`, tool availability, smoke queries              |
-| `claude-mem` worker | one healthy HTTP response                 | port, `workerPath`, process owner, `worker.pid`, settings       |
-| `claude-mem` hooks  | startup banner text                       | hook JSON shape, `SessionStart` payload probe, warm-up behavior |
-| Obsidian notes      | raw capture files, transcript dumps       | curated project note, source IDs, index link, no secrets        |
-| Overlays            | newest directory by timestamp             | exact active plugin version and matching overlay directory      |
-| TokenTracker/RTK    | package install success                   | version output, service status, smoke tests                     |
-| CHANGES.log Bridge  | copied prose or assumed global ignore     | protocol parity, top-level fallback, `git check-ignore -v`      |
+| Layer               | Do Not Trust Alone                        | Verify Instead                                                    |
+| ------------------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| Codex plugins       | repo files, release tags, old screenshots | `codex plugin list`, active plugin path, installed version        |
+| MCP                 | plugin manifest only                      | `codex mcp list`, tool availability, smoke queries                |
+| `claude-mem` worker | one healthy HTTP response                 | port, `workerPath`, process owner, `worker.pid`, settings         |
+| `claude-mem` hooks  | startup banner text                       | hook JSON shape, `SessionStart` payload probe, warm-up behavior   |
+| Obsidian notes      | raw capture files, transcript dumps       | curated project note, source IDs, index link, no secrets          |
+| Overlays            | newest directory by timestamp             | exact active plugin version and matching overlay directory        |
+| TokenTracker/RTK    | package install success                   | version output, service status, smoke tests                       |
+| CHANGES.log Bridge  | copied prose or assumed global ignore     | protocol parity, top-level fallback, `git check-ignore -v`        |
+| Meta-Loop Control   | a ledger receipt as spawn proof           | temporary-ledger lifecycle plus independent native-spawn evidence |
 
 ## Toolchain
 

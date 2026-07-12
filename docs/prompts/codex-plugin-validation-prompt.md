@@ -22,19 +22,28 @@ changing anything.
 2. Record current `codex --version`, `codex plugin list`, `codex mcp list`, and
    the presence—not values—of existing `~/.codex` and `~/.claude` config/hook
    files. Check whether a local checkout of this repository already exists.
-3. Clone one public mirror to a local working copy when needed. Do not run
-   helper scripts from a browser-only view.
-4. Before changing a user config, hook, or overlay, make a timestamped backup
-   and state the exact path that will change. Never overwrite an unknown
-   configuration without preserving it.
-5. If a prerequisite is absent and requires admin privileges, a GUI installer,
+3. Identify and state the exact path of every user config, hook, or overlay
+   that a later Phase 1 action could change. Plan a timestamped backup for each
+   path. This plan is record-only: do not write, copy, rename, or otherwise
+   change files during Phase 0.
+4. If a prerequisite is absent and requires admin privileges, a GUI installer,
    private credentials, or a choice not covered by this repository, do not
    guess or use `sudo`. Mark that component blocked or skipped and continue
    with the safe components.
-6. Select one platform section before running installation commands:
+5. Select one platform section before running installation commands:
    macOS, Linux, Windows PowerShell, or WSL. Use only the matching runbook
    commands and service model. If the execution context and platform section
    do not agree, report `platform=ambiguous` and stop before mutation.
+6. Decide first whether the requested scope includes multi-agent coordination.
+   If it does not, report `meta_loop=skipped:out-of-scope` and do not inspect
+   Meta-Loop prerequisites. If it does, continue with the read-only checks
+   below before Phase 1.
+7. For in-scope Meta-Loop Control, verify `node` works in this execution
+   context and record whether a local working copy and its
+   `scripts/meta-loop-control.cjs` are already readable. Do not create, test,
+   or remove a temporary directory during Phase 0. If a local copy is absent,
+   defer that prerequisite to Phase 1; do not guess a path or create persistent
+   state to make this check pass.
 
 ## Phase 1 — install and verify
 
@@ -43,6 +52,23 @@ the manifests and runbooks below. Prefer the exact commands in this repository
 over invented variants, but select the matching macOS, Linux, Windows
 PowerShell, or WSL section first. Use the per-component verification before
 calling any component healthy.
+
+Immediately before any user config, hook, or overlay mutation, create a
+timestamped backup of each exact path identified in Phase 0 and record its
+backup location. Never overwrite an unknown configuration without preserving
+it first.
+
+Before reading local documentation, running a helper, or validating Meta-Loop
+Control, reuse or clone one public mirror to a local working copy when needed.
+Do not run helper commands from a browser-only view. This is the first
+mutation-capable step and occurs only after Phase 0 pre-flight completes.
+
+For in-scope Meta-Loop Control, after a local copy is available, verify that
+`node` and `scripts/meta-loop-control.cjs` work in the selected execution
+context. Create a temporary directory only for the validate-only lifecycle and
+install cleanup immediately after it is created. If Node, the checkout, script,
+or temporary storage is unavailable, report `meta_loop=blocked:<reason>` and
+do not invent a fallback.
 
 Start by reading one of these public mirrors:
 
@@ -59,6 +85,8 @@ Then read:
 6. the relevant per-tool runbook under docs/runbooks/tools/
 7. for claude-mem, its compatibility policy in
    docs/manifests/verified-versions.yaml before selecting an overlay or errata.
+8. for Meta-Loop Control, docs/prompts/meta-loop-validation-prompt.md and
+   docs/runbooks/tools/meta-loop.md before its validate-only check.
 
 ## Phase 2 — report and handoff
 
@@ -70,6 +98,10 @@ component healthy. If verification fails, stop and propose a rollback that
 restores only the timestamped backup created for the changed file. Do not
 restore, uninstall packages, delete caches, or restart services automatically;
 wait for user approval, then verify the restored configuration and runtime.
+For `claude-mem`, include exactly one conditional errata field:
+`relevant_errata=none`, or `relevant_errata=<issue(s) actually consulted>`.
+List an issue only when its detected version or symptom made it relevant; do
+not list issues #5, #6, and #8 as a blanket checklist.
 
 Goal:
 Bootstrap, update, or validate the requested Codex plugin(s) using the public
@@ -77,10 +109,14 @@ runbooks, manifests, and live issue errata.
 
 Default scope:
 
+A user-requested scope overrides this default baseline.
+
 - If the user does not specify plugins, validate the Codex workstation baseline:
   claude-mem, 8-habit-ai-dev, claude-governance, TokenTracker, RTK, and
   Obsidian only where each tool is relevant and available. Also validate the
-  CHANGES.log Bridge Pattern when multi-agent handoff is in scope.
+  CHANGES.log Bridge Pattern when multi-agent handoff is in scope. When
+  multi-agent coordination is in scope, validate Meta-Loop Control with a
+  temporary ledger only; it is not a persistent installation step.
 - For a new machine, clone or otherwise create a local working copy of this
   repository before running helper scripts. Do not run helper commands from a
   browser-only view.
@@ -109,6 +145,23 @@ Important constraints:
   `ripgrep=missing`; do not fail the whole validation only because `rg` is
   absent.
 
+For Meta-Loop Control specifically:
+
+- Use docs/prompts/meta-loop-validation-prompt.md and
+  docs/runbooks/tools/meta-loop.md from the local working copy.
+- Run only the validate-only lifecycle with a newly created temporary ledger;
+  remove that directory after collecting the result. Do not install a hook,
+  retain a ledger, or invoke a native worker spawn as part of bootstrap.
+- If Phase 0 prerequisites pass and the lifecycle finishes, report
+  `meta_loop=validated`. If coordination is outside scope, report
+  `meta_loop=skipped:out-of-scope`. If Node, checkout, script, or temporary
+  storage is unavailable, report `meta_loop=blocked:<reason>` and do not
+  invent a fallback.
+- Record the CLI path and `node --version`, lifecycle result, and the two
+  boundaries: stale-lock recovery is trusted-local mtime recovery only, and an
+  attestation is not proof that the ledger launched, observed, or authenticated
+  a native worker.
+
 For claude-mem specifically:
 
 - Start with docs/runbooks/plugins/claude-mem.md.
@@ -127,7 +180,8 @@ For claude-mem specifically:
   not treat historical issue text as an installation recipe.
 - If a reviewed exact-match setup still fails verification, record
   `supported-with-failure`, stop mutation, and report the failed evidence plus
-  the applicable errata. Do not declare the runtime healthy.
+  the applicable errata (or `relevant_errata=none`). Do not declare the runtime
+  healthy.
 - If the goal is to test the runbook itself, also run docs/runbooks/claude-mem-scenario-tests.md and report which scenarios passed, failed, or were skipped.
 - Prefer installing and validating claude-mem with Claude Code first, then use the Codex plugin to connect Codex to the already-working worker.
 - Before any Codex-side install or overlay, run the runbook's Recommended Claude Code First Preflight and report whether the claude-mem worker is already healthy.
@@ -253,8 +307,12 @@ Provide a concise validation report with:
 - CHANGES.log Bridge protocol parity, Codex fallback status, global ignore
   status, and handoff smoke result, when relevant
 - Obsidian vault access, project note path, index rebuild result, and curation boundary, when relevant
+- Meta-Loop status (`meta_loop=validated|skipped|blocked`), CLI path and Node
+  version, temporary-ledger lifecycle result, and lock/attestation boundaries,
+  when multi-agent coordination is in scope
 - release URL or verified version used
 - validation commands run
-- issue #5/#6/#8 comments consulted and whether a new issue comment should be added
+- `relevant_errata=none`, or only the issue comments consulted for a matching
+  version or symptom and whether a new issue comment should be added
 - any remaining risk or manual follow-up
 ```
