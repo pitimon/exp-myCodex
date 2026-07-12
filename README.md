@@ -28,6 +28,7 @@ installer. It is a public-safe operating kit for Codex users who want:
 - token/cost visibility through TokenTracker
 - compact command output through RTK
 - multi-agent handoff through the CHANGES.log Bridge Pattern
+- bounded worker coordination through a local Meta-Loop Control ledger
 - exact-version overlays when fast-moving plugins break Codex behavior
 - repeatable validation prompts for target machines
 
@@ -83,6 +84,7 @@ For a human reading the repo, use this path:
 | 6    | `docs/runbooks/tools/changes-log-bridge.md`      | Prepare multi-agent local handoff                  |
 | 7    | `docs/runbooks/plugins/claude-mem.md`            | Validate the memory layer                          |
 | 8    | `docs/runbooks/claude-mem-scenario-tests.md`     | Stress-test the runbook on a real machine          |
+| 9    | `docs/prompts/meta-loop-validation-prompt.md`    | Validate the workflow-only control ledger safely   |
 
 ## System View
 
@@ -162,6 +164,7 @@ Every runbook pushes the operator toward observable evidence:
 | Visibility    | TokenTracker          | Track token/cost usage and run a local dashboard/service                  | `docs/runbooks/tools/tokentracker.md`        |
 | Efficiency    | RTK                   | Reduce noisy command output before it reaches Codex context               | `docs/runbooks/tools/rtk.md`                 |
 | Handoff       | CHANGES.log Bridge    | Coordinate Claude Code and Codex through a local git-ignored scratchpad   | `docs/runbooks/tools/changes-log-bridge.md`  |
+| Coordination  | Meta-Loop Control     | Record task lifecycle and attestations; never launch workers              | `docs/runbooks/tools/meta-loop.md`           |
 | Compatibility | `claude-mem` overlays | Patch known Codex compatibility breaks by exact plugin version            | `overlays/`                                  |
 
 ## The CHANGES.log Bridge Pattern
@@ -266,6 +269,7 @@ docs/
       template.md
     tools/
       changes-log-bridge.md
+      meta-loop.md
       obsidian.md
       rtk.md
       tokentracker.md
