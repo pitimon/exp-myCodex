@@ -45,6 +45,7 @@ directory; it does not launch a worker or contact a service.
 <!-- markdownlint-disable MD013 -->
 
 ```bash
+set -e
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 packet="$tmp_dir/packet.json"
@@ -64,8 +65,30 @@ node scripts/meta-loop-control.cjs finish --ledger "$ledger"
 
 Each successful command prints the full updated JSON ledger. The last result
 has `state: "finished"` and a `synthesis` record containing `docs-worker`.
-For a validation-only check, stop after `validate-packet`; it does not create
-or change a ledger.
+For syntax-only validation, stop after `validate-packet`; it does not create or
+change a ledger. The bootstrap's validate-only check instead runs the complete
+synthetic lifecycle above in a temporary directory; it still does not launch a
+worker or retain persistent state.
+
+## Bootstrap Validation Boundary
+
+The new-workstation bootstrap treats Meta-Loop Control as `validate-only`.
+First decide whether multi-agent coordination is in scope. If it is not,
+report `meta_loop=skipped:out-of-scope` without checking Meta-Loop
+prerequisites. For an in-scope check, confirm that Node works in the active
+execution context and that the local checkout contains
+`scripts/meta-loop-control.cjs`. Create a temporary directory only in the
+mutation-capable validation step, after those checks pass; `set -e` and the
+cleanup trap make the lifecycle fail closed and remove that directory after a
+successful creation. A missing prerequisite is `meta_loop=blocked:<reason>`.
+Do not invent a path, install a hook, retain a ledger, or start a worker to
+satisfy bootstrap validation.
+
+When the temporary lifecycle completes, report `meta_loop=validated` with the
+CLI path, `node --version`, and lifecycle result. Also report that lock recovery
+is trusted-local mtime recovery only and an attestation is not native-spawn
+proof. Remove the temporary directory after the check. The ledger never
+launches, observes, authenticates, or authorizes a worker.
 
 ## Managed Attestation Boundary
 

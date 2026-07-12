@@ -9,10 +9,23 @@ verification, handoff, and token-efficiency habits from day one.
 Start a new workstation with this prompt:
 
 ```text
-Read https://github.com/pitimon/exp-myCodex
+You are preparing this as a new Codex workstation. Codex is already installed
+and authenticated. Read https://github.com/pitimon/exp-myCodex, then follow
+docs/prompts/codex-plugin-validation-prompt.md in full. Reuse or clone a local
+working copy only at the Phase 1 point that canonical prompt specifies.
 
-Then follow docs/prompts/codex-plugin-validation-prompt.md.
+Run its Phase 0 pre-flight before changing anything. If the pre-flight passes,
+install and verify only the documented baseline components supported on this
+platform. Back up existing user configuration before changing it, never print
+secrets, do not use private repositories, and report every skipped or blocked
+component instead of guessing. Finish with the canonical prompt's evidence
+report and clearly state whether a Codex restart is required.
 ```
+
+`docs/prompts/codex-plugin-validation-prompt.md` is the single canonical
+source for operational detail, including the read-only Phase 0 then local
+working-copy sequence. This target-machine prompt is its stable entry route,
+not an alternative installation procedure.
 
 The same repository is mirrored at:
 

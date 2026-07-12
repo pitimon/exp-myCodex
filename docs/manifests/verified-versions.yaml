@@ -26,6 +26,28 @@ plugins:
         - active Codex plugin version and path
         - claude-mem worker version and path
         - selected overlay version or missing-overlay state
+      evidence_record_format:
+        required_fields:
+          - state (reviewed-exact-match|discovery-no-mutation|supported-with-failure)
+          - active_plugin_version
+          - active_plugin_path
+          - worker_version_or_unknown
+          - worker_path_or_unknown
+          - overlay (exact-version|missing_for_version:<version>|not-applied)
+          - verification (passed|failed|not-run)
+          - relevant_errata (issue numbers or none)
+        report_example: >-
+          claude_mem_evidence={state=<state>;active_plugin_version=<version>;
+          active_plugin_path=<path>;worker_version=<version|unknown>;
+          worker_path=<path|unknown>;overlay=<state>;
+          verification=<passed|failed|not-run>;relevant_errata=<issues|none>}
+      state_transitions:
+        exact_overlay_found: Enter reviewed-exact-match before a matching overlay is applied.
+        exact_match_verified: Exit reviewed-exact-match as healthy only after complete verification passes.
+        exact_match_failed: Move from reviewed-exact-match to supported-with-failure; stop mutation and report failed evidence.
+        overlay_missing: Enter discovery-no-mutation; collect discovery evidence and do not patch or copy an older overlay.
+        discovery_complete: Exit discovery-no-mutation only with a report; it is neither healthy nor an authorization to mutate.
+        future_retry: A later retry starts again from detected active versions and chooses one state anew.
       exact_match_action: Use only the matching overlay and run its complete verification.
       version_drift_action: Do not mutate plugin files. Run the runbook discovery checks, report overlay=missing_for_version:<version>, and use only relevant live errata as diagnostic context.
       live_errata:
