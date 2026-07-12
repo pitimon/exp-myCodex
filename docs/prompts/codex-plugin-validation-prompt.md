@@ -14,7 +14,11 @@ changing anything.
 
 1. Identify OS, architecture, shell, current user, available disk space, and
    whether `git`, `node`, `npm`, `npx`, `codex`, and (when relevant) `claude`
-   are available from the shell that will run the tools.
+   are available from the shell that will run the tools. Record
+   `execution_context=local-shell|ssh|wsl`, the current user, and whether the
+   relevant executable paths work in that same context. Run helpers only from
+   a local authenticated shell or a verified SSH/WSL shell, never from a
+   browser preview or an unverified remote session.
 2. Record current `codex --version`, `codex plugin list`, `codex mcp list`, and
    the presence—not values—of existing `~/.codex` and `~/.claude` config/hook
    files. Check whether a local checkout of this repository already exists.
@@ -27,13 +31,18 @@ changing anything.
    private credentials, or a choice not covered by this repository, do not
    guess or use `sudo`. Mark that component blocked or skipped and continue
    with the safe components.
+6. Select one platform section before running installation commands:
+   macOS, Linux, Windows PowerShell, or WSL. Use only the matching runbook
+   commands and service model. If the execution context and platform section
+   do not agree, report `platform=ambiguous` and stop before mutation.
 
 ## Phase 1 — install and verify
 
 Install the documented baseline components supported on this platform, using
 the manifests and runbooks below. Prefer the exact commands in this repository
-over invented variants. Use the per-component verification before calling any
-component healthy.
+over invented variants, but select the matching macOS, Linux, Windows
+PowerShell, or WSL section first. Use the per-component verification before
+calling any component healthy.
 
 Start by reading one of these public mirrors:
 
@@ -55,10 +64,14 @@ Then read:
 
 ## Phase 2 — report and handoff
 
-Finish with a concise evidence report: platform and shell, installed/updated
-components, active paths and versions, backups made, checks run, components
-skipped/blocked with reasons, residual risks, rollback locations, and whether
-Codex must be restarted. Never label an unverified component healthy.
+Finish with a concise evidence report: platform and shell, selected platform
+section, installed/updated components, active paths and versions, backups made,
+checks run, components skipped/blocked with reasons, residual risks, rollback
+locations, and whether Codex must be restarted. Never label an unverified
+component healthy. If verification fails, stop and propose a rollback that
+restores only the timestamped backup created for the changed file. Do not
+restore, uninstall packages, delete caches, or restart services automatically;
+wait for user approval, then verify the restored configuration and runtime.
 
 Goal:
 Bootstrap, update, or validate the requested Codex plugin(s) using the public
