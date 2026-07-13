@@ -197,18 +197,18 @@ Every runbook pushes the operator toward observable evidence:
 
 ## Toolchain
 
-| Area           | Component                   | Why It Is Here                                                            | Runbook                                           |
-| -------------- | --------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
-| Memory         | `claude-mem`                | Reuse historical agent memory through Codex hooks and `mcp-search`        | `docs/runbooks/plugins/claude-mem.md`             |
-| Second brain   | Obsidian                    | Store curated human-readable project notes without replacing `claude-mem` | `docs/runbooks/tools/obsidian.md`                 |
-| Workflow       | `8-habit-ai-dev`            | Keep AI-assisted engineering structured and reviewable                    | `docs/runbooks/plugins/8-habit-ai-dev.md`         |
-| Governance     | `claude-governance`         | Add ADR, compliance, and engineering governance support                   | `docs/runbooks/plugins/claude-governance.md`      |
-| Visibility     | TokenTracker                | Track token/cost usage and run a local dashboard/service                  | `docs/runbooks/tools/tokentracker.md`             |
-| Efficiency     | RTK                         | Reduce noisy command output before it reaches Codex context               | `docs/runbooks/tools/rtk.md`                      |
-| Handoff        | CHANGES.log Bridge          | Coordinate Claude Code and Codex through a local git-ignored scratchpad   | `docs/runbooks/tools/changes-log-bridge.md`       |
-| Review routing | Meta Loop reviewer receipts | Prove reviewer identity/read-only boundary and disclose fallback or hold  | `docs/runbooks/tools/meta-loop-review-routing.md` |
-| Coordination   | Meta-Loop Control           | Record task lifecycle and attestations; never launch workers              | `docs/runbooks/tools/meta-loop.md`                |
-| Compatibility  | `claude-mem` overlays       | Patch known Codex compatibility breaks by exact plugin version            | `overlays/`                                       |
+| Area           | Component                   | Why It Is Here                                                                                  | Runbook                                           |
+| -------------- | --------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Memory         | `claude-mem`                | Reuse historical agent memory through Codex hooks and `mcp-search`                              | `docs/runbooks/plugins/claude-mem.md`             |
+| Second brain   | Obsidian                    | Store curated human-readable project notes without replacing `claude-mem`                       | `docs/runbooks/tools/obsidian.md`                 |
+| Workflow       | `8-habit-ai-dev`            | Keep AI-assisted engineering structured and reviewable                                          | `docs/runbooks/plugins/8-habit-ai-dev.md`         |
+| Governance     | `claude-governance`         | Add ADR, compliance, and engineering governance support                                         | `docs/runbooks/plugins/claude-governance.md`      |
+| Visibility     | TokenTracker                | Track token/cost usage and run a local dashboard/service                                        | `docs/runbooks/tools/tokentracker.md`             |
+| Efficiency     | RTK                         | Reduce noisy command output before it reaches Codex context                                     | `docs/runbooks/tools/rtk.md`                      |
+| Handoff        | CHANGES.log Bridge          | Coordinate Claude Code and Codex through a local git-ignored scratchpad                         | `docs/runbooks/tools/changes-log-bridge.md`       |
+| Review routing | Meta Loop reviewer receipts | Record and validate reported route, identity, and read-only metadata; disclose fallback or hold | `docs/runbooks/tools/meta-loop-review-routing.md` |
+| Coordination   | Meta-Loop Control           | Record task lifecycle and attestations; never launch workers                                    | `docs/runbooks/tools/meta-loop.md`                |
+| Compatibility  | `claude-mem` overlays       | Patch known Codex compatibility breaks by exact plugin version                                  | `overlays/`                                       |
 
 ## The CHANGES.log Bridge Pattern
 

@@ -91,9 +91,10 @@ Before using a route on a new workstation or after a runtime/model update:
    selected and accurately labelled.
 4. Confirm that an invalid primary and invalid fallback result in `hold`.
 
-A reference implementation validated all four outcomes. That result is useful
-evidence for its source environment, not a portability guarantee; each target
-machine must repeat the canaries with its own runtime metadata.
+An implementation should publish a reproducible validation record for these
+outcomes. A result is evidence only for its source environment, not a
+portability guarantee; each target machine must repeat the canaries with its
+own runtime metadata.
 
 ## Operational checklist
 
