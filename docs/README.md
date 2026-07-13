@@ -46,14 +46,20 @@ https://gitea.ipv9.me/pitimon/exp-myCodex
 5. `manifests/verified-versions.yaml` - current reviewed baseline and caveats.
 6. `runbooks/tools/changes-log-bridge.md` - multi-agent CHANGES.log handoff
    setup.
-7. `runbooks/plugins/claude-mem.md` - memory worker, hook, MCP, and overlay
+7. `runbooks/tools/meta-loop-dispatch-control.md` - public-safe bounded
+   dispatch, duplicate-scope, and child-telemetry audit pattern.
+8. `runbooks/tools/meta-loop-admission-gate.md` - public-safe pre-dispatch
+   decision and bounded-brief pattern.
+9. `runbooks/plugins/claude-mem.md` - memory worker, hook, MCP, and overlay
    validation.
-8. `runbooks/claude-mem-scenario-tests.md` - end-to-end scenario checks for the
-   memory runbook.
-9. `runbooks/tools/meta-loop.md` - local task-ledger lifecycle, single-writer
-   safety, and attestation boundary.
-10. `prompts/meta-loop-validation-prompt.md` - dedicated, synthetic
+10. `runbooks/claude-mem-scenario-tests.md` - end-to-end scenario checks for the
+    memory runbook.
+11. `runbooks/tools/meta-loop.md` - local task-ledger lifecycle, single-writer
+    safety, and attestation boundary.
+12. `prompts/meta-loop-validation-prompt.md` - dedicated, synthetic
     temporary-ledger validation flow for Meta-Loop Control.
+13. `runbooks/tools/meta-loop-review-routing.md` - public-safe reviewer
+    receipts and fallback routing for high-impact Meta Loop decisions.
 
 ## Runbook Index
 
@@ -77,6 +83,7 @@ Tool runbooks:
 ```text
 runbooks/tools/changes-log-bridge.md
 runbooks/tools/meta-loop.md
+runbooks/tools/meta-loop-review-routing.md
 runbooks/tools/obsidian.md
 runbooks/tools/rtk.md
 runbooks/tools/tokentracker.md

@@ -121,12 +121,16 @@ audit, but is not that binding:
 - an observed subagent-activity child identifier with no direct dispatch
   binding.
 
-In the verified Codex 0.144.1 boundary, neither the available application-
-server spawn-event candidate nor later metadata established a safe
-dispatch-time native-correlation contract. Do not infer the missing binding
-from timing, task text, worker names, or a session identifier. A session
-identifier may support post-run token or activity audit, but is not a native
-child identifier for dispatch control.
+In a bounded live probe on 2026-07-13, a child appeared in local session
+metadata but was not immediately available through App Server `thread/list`;
+an already-subscribed App Server connection also emitted no `thread/started`
+notification for that native collaboration spawn. In the verified Codex
+0.144.1 boundary, neither the available application-server spawn-event
+candidate nor later metadata established a safe dispatch-time
+native-correlation contract. Do not infer the missing binding from timing,
+task text, worker names, or a session identifier. A session identifier may
+support post-run token or activity audit, but is not a native child identifier
+for dispatch control.
 
 Keep native work at no more than three children per wave while this boundary
 holds. Do not raise that cap until one of these conditions is demonstrated in a
