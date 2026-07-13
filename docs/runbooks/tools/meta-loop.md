@@ -109,19 +109,43 @@ output, private paths, or provider-specific credentials in an attestation or
 
 ## Native Spawn Correlation Boundary
 
-For a native multi-agent runtime, a ledger attestation remains a caller record
-unless the runtime returns a child thread identifier at spawn or exposes a
-documented event stream that demonstrably observes that spawn. Do not raise
-fan-out from a metadata-polling result alone. In a bounded live probe on
-2026-07-13, a child appeared in local session metadata but was not immediately
-available through App Server `thread/list`; an already-subscribed App Server
-connection also emitted no `thread/started` notification for that native
-collaboration spawn. That makes those mechanisms useful for later audit, not
-native proof or a release gate.
+The control ledger is not a native-runtime correlation adapter. A native child
+identifier must be bound to the exact dispatch before it can be used as a
+release gate for higher fan-out. The following evidence is useful for a later
+audit, but is not that binding:
 
-Until an adapter passes a harmless live one-child correlation scenario, keep
-native work bounded, use `fork_turns=none`, and hold any proposed high-fan-out
-expansion. A mock-only adapter test cannot replace this scenario.
+- a ledger attestation;
+- an application-server spawn-event candidate that has not passed a live
+  causal and replay-safety scenario;
+- later session metadata, polling output, or local activity history; or
+- an observed subagent-activity child identifier with no direct dispatch
+  binding.
+
+In a bounded live probe on 2026-07-13, a child appeared in local session
+metadata but was not immediately available through App Server `thread/list`;
+an already-subscribed App Server connection also emitted no `thread/started`
+notification for that native collaboration spawn. In the verified Codex
+0.144.1 boundary, neither the available application-server spawn-event
+candidate nor later metadata established a safe dispatch-time
+native-correlation contract. Do not infer the missing binding from timing,
+task text, worker names, or a session identifier. A session identifier may
+support post-run token or activity audit, but is not a native child identifier
+for dispatch control.
+
+Keep native work at no more than three children per wave while this boundary
+holds. Do not raise that cap until one of these conditions is demonstrated in a
+harmless live scenario on the target runtime:
+
+1. The native spawn API returns the child thread identifier directly; or
+2. A documented event contract provides a causal, replay-safe binding from the
+   dispatch to exactly one child thread identifier.
+
+For either condition, pre-subscribe before the spawn when events are used, then
+prove the expected parent and dispatch binding, one-to-one child mapping,
+bounded delivery time, and safe failure on missing, duplicate, late, or
+mismatched identifiers. A mock-only test, a later history query, or a child ID
+seen after the fact cannot replace this scenario. If the evidence is absent or
+ambiguous, hold the high-fan-out wave and retain the cap of three.
 
 ## Single-Writer Lock And Stale Recovery
 
@@ -190,6 +214,9 @@ finish
 - [ ] Each recorded spawn and return has an explicit, non-sensitive
       attestation, with independent evidence retained outside the ledger when
       needed.
+- [ ] Any proposed native fan-out above three has a direct child-ID return or a
+      documented causal, replay-safe event contract that passed the live
+      scenario described above; otherwise the wave is held.
 - [ ] No active worker remains before synthesis.
 - [ ] The ledger is synthesized, finished, and preserved or removed according
       to the task's retention policy.
