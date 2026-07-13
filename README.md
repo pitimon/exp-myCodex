@@ -29,7 +29,7 @@ installer. It is a public-safe operating kit for Codex users who want:
 - compact command output through RTK
 - multi-agent handoff through the CHANGES.log Bridge Pattern
 - bounded worker coordination through a local Meta-Loop Control ledger
-- verified reviewer routing for high-impact Meta Loop decisions
+- reviewer-routing pattern for high-impact Meta Loop decisions
 - exact-version overlays when fast-moving plugins break Codex behavior
 - repeatable validation prompts for target machines
 

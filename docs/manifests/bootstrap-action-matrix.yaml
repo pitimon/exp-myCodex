@@ -15,7 +15,7 @@ components:
     conditional: [claude, sqlite3, uvx]
     action_class: config-hook-and-plugin-mutation
     approval: component-install-or-overlay-apply
-    rollback: timestamped-config-backup-plus-documented-plugin-state
+    rollback: partial; config backup is restorable, but plugin/cache restoration requires prior source/version, explicit steps, and approval
   tokentracker:
     phase0_required: [node, npm, npx]
     conditional: [curl, service-manager]
@@ -28,7 +28,7 @@ components:
     conditional: [rg]
     action_class: userspace-config-and-git-ignore-write
     approval: bridge-configuration-apply
-    rollback: timestamped-config-backup
+    rollback: partial; configuration backup is restorable, while git-ignore restoration requires a captured prior value and explicit approval
   rtk:
     phase0_required: []
     conditional: [brew, curl]
@@ -47,9 +47,8 @@ components:
     default_mode: validate-only
     rollback: temporary-directory-cleanup
   reviewer-routing:
-    phase0_required: [declared-adapter]
-    conditional: [primary-route, fallback-route]
+    phase0_required: [declared-adapter, primary-route, fallback-route, hold-policy]
     action_class: declared-adapter-canary
     default_mode: skipped-out-of-scope
     approval: reviewer-routing-canary
-    rollback: no-implementation-authority; hold-if-unavailable
+    rollback: no-implementation-authority; block-if-any-route-missing and hold-if-unavailable
