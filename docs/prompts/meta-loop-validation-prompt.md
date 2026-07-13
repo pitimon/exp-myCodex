@@ -34,9 +34,16 @@ Verify and report:
   only on the lock mtime and does not verify owner identity or process liveness
 - the managed-attestation boundary: confirm-spawn records operator metadata;
   it does not prove or execute a native worker spawn
+- the native-correlation boundary: later session metadata or an observed
+  subagent-activity child ID is audit evidence only. It does not bind that child
+  to a particular dispatch at spawn time. Keep native work at no more than
+  three children per wave unless the runtime returns a direct child ID or a
+  documented causal, replay-safe event contract has passed a live scenario.
 
 Do not call an unwrapped native spawn managed or verified by this tool. Do not
 print secrets, tokens, private paths, private issue links, or provider bridge
-details. Do not treat the lock as ownership-safe across untrusted users or
-hosts. If a check is skipped or cannot be proven, say so plainly.
+details. Do not treat an event candidate, polling result, or later metadata as
+a dispatch-time native-correlation contract without that scenario evidence. Do
+not treat the lock as ownership-safe across untrusted users or hosts. If a
+check is skipped or cannot be proven, say so plainly.
 ```
