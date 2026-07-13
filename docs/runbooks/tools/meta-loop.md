@@ -107,6 +107,22 @@ Use opaque, non-sensitive attestation labels. Do not put tokens, command
 output, private paths, or provider-specific credentials in an attestation or
 `--result` value.
 
+## Native Spawn Correlation Boundary
+
+For a native multi-agent runtime, a ledger attestation remains a caller record
+unless the runtime returns a child thread identifier at spawn or exposes a
+documented event stream that demonstrably observes that spawn. Do not raise
+fan-out from a metadata-polling result alone. In a bounded live probe on
+2026-07-13, a child appeared in local session metadata but was not immediately
+available through App Server `thread/list`; an already-subscribed App Server
+connection also emitted no `thread/started` notification for that native
+collaboration spawn. That makes those mechanisms useful for later audit, not
+native proof or a release gate.
+
+Until an adapter passes a harmless live one-child correlation scenario, keep
+native work bounded, use `fork_turns=none`, and hold any proposed high-fan-out
+expansion. A mock-only adapter test cannot replace this scenario.
+
 ## Single-Writer Lock And Stale Recovery
 
 Every command that writes a ledger uses `<ledger>.lock` as an exclusive,
