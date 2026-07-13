@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD013 -->
 
-# Verified Reviewer Routing for Meta Loops
+# Reviewer Routing Receipts for Meta Loops
 
 This public pattern adds a bounded final-challenge review to a multi-agent
 workflow. It is useful for security-sensitive, high-impact, or irreversible
@@ -10,9 +10,9 @@ check with obvious evidence.
 ## The problem
 
 A successful command, a requested model label, and a plausible reviewer answer
-do not prove that the intended reviewer ran or stayed read-only. A robust loop
-therefore needs a small, machine-verifiable receipt before it treats outside
-advice as review input.
+do not prove that the intended reviewer ran or stayed read-only. A receipt is
+adapter-reported evidence, not independent proof of reviewer identity or
+behavior unless a named trusted attestation mechanism supplies that proof.
 
 ## Safe routing pattern
 
@@ -43,7 +43,7 @@ not:
 | Check     | Required property                                             | On failure                |
 | --------- | ------------------------------------------------------------- | ------------------------- |
 | Process   | bounded deadline and successful completion                    | mark unavailable          |
-| Identity  | runtime metadata equals the selected reviewer identity        | reject response           |
+| Identity  | reported runtime metadata matches the selected route          | reject response           |
 | Read-only | zero tool calls, or an equivalently verified no-tool boundary | reject response           |
 | Content   | non-empty response to a sanitized challenge brief             | reject response           |
 | Route     | requested and selected route plus reason                      | disclose fallback or hold |
@@ -55,7 +55,7 @@ Example receipt shape:
   "requested_route": "primary",
   "selected_route": "fallback",
   "status": "ok",
-  "identity_verified": true,
+  "reported_identity_matches": true,
   "tool_use_count": 0,
   "fallback_reason": "primary reviewer unavailable"
 }
@@ -66,7 +66,7 @@ output in this receipt.
 
 ## Fallback policy
 
-1. Attempt the preferred reviewer once through the verified preflight.
+1. Attempt the preferred reviewer once through the documented preflight.
 2. If its receipt is absent, late, malformed, mismatched, or non-read-only,
    mark it unavailable; do not retry silently.
 3. Attempt the configured fallback reviewer with the same identity and

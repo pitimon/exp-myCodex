@@ -1,0 +1,55 @@
+# Canonical target-machine bootstrap control matrix.
+components:
+  base-shell:
+    phase0_required: [git, node, npm, npx, codex]
+    conditional: [claude, rg]
+    action_class: local-read-only
+    rollback: not-applicable
+  codex-plugins:
+    phase0_required: [git, node, npm, npx, codex]
+    action_class: network-install-and-cache-write
+    approval: component-install-or-update
+    rollback: component-specific; config backup alone is insufficient
+  claude-mem:
+    phase0_required: [node, npm, npx, codex]
+    conditional: [claude, sqlite3, uvx]
+    action_class: config-hook-and-plugin-mutation
+    approval: component-install-or-overlay-apply
+    rollback: timestamped-config-backup-plus-documented-plugin-state
+  tokentracker:
+    phase0_required: [node, npm, npx]
+    conditional: [curl, service-manager]
+    action_class: network-command-or-persistent-service
+    default_mode: metadata-and-doctor-only
+    approval: tokentracker_runtime_writes=approved
+    rollback: service-disable-and-created-paths-recorded
+  changes-log-bridge:
+    phase0_required: [git, python3]
+    conditional: [rg]
+    action_class: userspace-config-and-git-ignore-write
+    approval: bridge-configuration-apply
+    rollback: timestamped-config-backup
+  rtk:
+    phase0_required: []
+    conditional: [brew, curl]
+    action_class: package-or-binary-install
+    approval: rtk-install
+    rollback: package-or-binary-removal-requires-approval
+  obsidian:
+    phase0_required: []
+    conditional: [node]
+    action_class: local-note-or-index-write
+    approval: obsidian-workflow-apply
+    rollback: created-paths-recorded
+  meta-loop-control:
+    phase0_required: [node]
+    action_class: temporary-local-ledger
+    default_mode: validate-only
+    rollback: temporary-directory-cleanup
+  reviewer-routing:
+    phase0_required: [declared-adapter]
+    conditional: [primary-route, fallback-route]
+    action_class: declared-adapter-canary
+    default_mode: skipped-out-of-scope
+    approval: reviewer-routing-canary
+    rollback: no-implementation-authority; hold-if-unavailable

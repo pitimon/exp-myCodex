@@ -21,7 +21,8 @@ changing anything.
    browser preview or an unverified remote session.
 2. Record current `codex --version`, `codex plugin list`, `codex mcp list`, and
    the presence—not values—of existing `~/.codex` and `~/.claude` config/hook
-   files. Check whether a local checkout of this repository already exists.
+   files. If a local checkout exists, record its origin URL, ref/commit, and
+   dirty/clean state; do not trust, modify, or run it in Phase 0.
 3. Identify and state the exact path of every user config, hook, or overlay
    that a later Phase 1 action could change. Plan a timestamped backup for each
    path. This plan is record-only: do not write, copy, rename, or otherwise
@@ -44,6 +45,11 @@ changing anything.
    or remove a temporary directory during Phase 0. If a local copy is absent,
    defer that prerequisite to Phase 1; do not guess a path or create persistent
    state to make this check pass.
+8. Decide separately whether final-challenge reviewer routing is in scope. If
+   it is not, report `review_routing=skipped:out-of-scope`. If it is, record
+   the declared adapter/preflight command plus primary and fallback route names.
+   Do not invoke a reviewer, install an adapter, or infer model identity in
+   Phase 0; a missing declared adapter is `review_routing=blocked:adapter-missing`.
 
 ## Phase 1 — install and verify
 
@@ -70,6 +76,12 @@ install cleanup immediately after it is created. If Node, the checkout, script,
 or temporary storage is unavailable, report `meta_loop=blocked:<reason>` and
 do not invent a fallback.
 
+For in-scope reviewer routing, run only the declared adapter's documented
+harmless primary, forced-fallback, and hold canaries after its prerequisites
+and action class are approved. Report `review_routing=validated`,
+`blocked:<reason>`, or `skipped:out-of-scope`. A receipt is adapter-reported
+metadata unless a separately documented trusted attestation mechanism exists.
+
 Start by reading one of these public mirrors:
 
 https://github.com/pitimon/exp-myCodex
@@ -87,6 +99,9 @@ Then read:
    docs/manifests/verified-versions.yaml before selecting an overlay or errata.
 8. for Meta-Loop Control, docs/prompts/meta-loop-validation-prompt.md and
    docs/runbooks/tools/meta-loop.md before its validate-only check.
+9. for in-scope reviewer routing,
+   docs/runbooks/tools/meta-loop-review-routing.md and the declared adapter's
+   own runbook before any canary.
 
 ## Phase 2 — report and handoff
 
@@ -102,6 +117,10 @@ For `claude-mem`, include exactly one conditional errata field:
 `relevant_errata=none`, or `relevant_errata=<issue(s) actually consulted>`.
 List an issue only when its detected version or symptom made it relevant; do
 not list issues #5, #6, and #8 as a blanket checklist.
+Include every selected component's action class, prerequisite result, mutation
+receipt, rollback feasibility, and one of `validated`, `blocked`, `skipped`,
+or `not-selected`; never call a component rollback-ready when only a config
+backup exists.
 
 Goal:
 Bootstrap, update, or validate the requested Codex plugin(s) using the public
@@ -120,6 +139,11 @@ A user-requested scope overrides this default baseline.
 - For a new machine, clone or otherwise create a local working copy of this
   repository before running helper scripts. Do not run helper commands from a
   browser-only view.
+- Treat the default baseline as discovery and validation first. Do not enable a
+  persistent service, external data sync, hook installation, or cross-tool
+  configuration without explicit component-level approval. TokenTracker is
+  metadata/doctor-only by default; dashboard or background mode requires
+  `tokentracker_runtime_writes=approved`.
 - For claude-mem, use its compatibility policy to choose exactly one state:
   `reviewed-exact-match`, `discovery-no-mutation`, or `supported-with-failure`.
   Record that state before changing a hook or overlay.
@@ -144,6 +168,10 @@ Important constraints:
 - If `rg` is unavailable, use `grep` for the same targeted checks or report
   `ripgrep=missing`; do not fail the whole validation only because `rg` is
   absent.
+- Before each selected component, use
+  `docs/manifests/bootstrap-action-matrix.yaml` to check required versus
+  conditional prerequisites, action class, side effects, and rollback
+  feasibility. Missing required prerequisites block only that component.
 
 For Meta-Loop Control specifically:
 
