@@ -54,6 +54,8 @@ https://gitea.ipv9.me/pitimon/exp-myCodex
    safety, and attestation boundary.
 10. `prompts/meta-loop-validation-prompt.md` - dedicated, synthetic
     temporary-ledger validation flow for Meta-Loop Control.
+11. `runbooks/tools/meta-loop-review-routing.md` - public-safe reviewer
+    receipts and fallback routing for high-impact Meta Loop decisions.
 
 ## Runbook Index
 
@@ -77,6 +79,7 @@ Tool runbooks:
 ```text
 runbooks/tools/changes-log-bridge.md
 runbooks/tools/meta-loop.md
+runbooks/tools/meta-loop-review-routing.md
 runbooks/tools/obsidian.md
 runbooks/tools/rtk.md
 runbooks/tools/tokentracker.md
