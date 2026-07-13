@@ -4,6 +4,10 @@
 
 Use this public pattern when a multi-agent workflow could duplicate work or replay a long conversation into several children. It controls context and evidence; it does not claim to intercept every platform-native spawn.
 
+Start with the [Meta Loop Admission Gate](meta-loop-admission-gate.md) so the
+orchestrator decides whether delegation is justified and creates the bounded
+brief before this dispatch control applies.
+
 ## Default rule
 
 Every child starts with a small context packet and no inherited conversation:

@@ -48,15 +48,17 @@ https://gitea.ipv9.me/pitimon/exp-myCodex
    setup.
 7. `runbooks/tools/meta-loop-dispatch-control.md` - public-safe bounded
    dispatch, duplicate-scope, and child-telemetry audit pattern.
-8. `runbooks/plugins/claude-mem.md` - memory worker, hook, MCP, and overlay
+8. `runbooks/tools/meta-loop-admission-gate.md` - public-safe pre-dispatch
+   decision and bounded-brief pattern.
+9. `runbooks/plugins/claude-mem.md` - memory worker, hook, MCP, and overlay
    validation.
-9. `runbooks/claude-mem-scenario-tests.md` - end-to-end scenario checks for the
-   memory runbook.
-10. `runbooks/tools/meta-loop.md` - local task-ledger lifecycle, single-writer
+10. `runbooks/claude-mem-scenario-tests.md` - end-to-end scenario checks for the
+    memory runbook.
+11. `runbooks/tools/meta-loop.md` - local task-ledger lifecycle, single-writer
     safety, and attestation boundary.
-11. `prompts/meta-loop-validation-prompt.md` - dedicated, synthetic
+12. `prompts/meta-loop-validation-prompt.md` - dedicated, synthetic
     temporary-ledger validation flow for Meta-Loop Control.
-12. `runbooks/tools/meta-loop-review-routing.md` - public-safe reviewer
+13. `runbooks/tools/meta-loop-review-routing.md` - public-safe reviewer
     receipts and fallback routing for high-impact Meta Loop decisions.
 
 ## Runbook Index
